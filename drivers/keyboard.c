@@ -2,14 +2,28 @@
 
 key_event	keyboard_buffer[MAX_KEYB_BUFFER_SIZE];
 static u8	buff_pos = 0;
+static u8	Shift = 0;
+static u8	Caps = 0;
 
-static const u8 scancode_to_ascii[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+static const u8 scancode_to_ascii_low[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
 				'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j',
 				'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+static const u8 scancode_to_ascii_shift[87] = {0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
+				'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
+				'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ',
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+static const u8 scancode_to_ascii_caps[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+				'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
+				'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ',
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+
+
 static bool	getascii(u8 code) {
-	if (code > 0x57 || scancode_to_ascii[code] == 0) {
+	if (code > 0x57 || scancode_to_ascii_low[code] == 0) {
 		//print_string("return false", (BLACK << 4) + LIGHT_RED);
 		return false;
 	}
@@ -19,11 +33,17 @@ static bool	getascii(u8 code) {
 
 void	keyboard_handler(void) {
 	u8 scancode = inb(0x60); // reading byte from keyboard data port 0x60
+	if (scancode == 
 	if (!(scancode & 0x80)) {  // Bit 7 clear = key press
 		//print_hex((u32)scancode);
-		//print_char(scancode_to_ascii[2], (BLACK << 4) + LIGHT_BLUE);
-		if (getascii(scancode))
-			print_char(scancode_to_ascii[scancode], (BLACK << 4) + LIGHT_PURPLE);
+		//print_char(scancode_to_ascii_low[2], (BLACK << 4) + LIGHT_BLUE);
+		if (getascii(scancode)) {
+			if (!Caps || !Shift)
+				print_char(scancode_to_ascii_low[scancode], (BLACK << 4) + LIGHT_PURPLE);
+			else
+				print_char(scancode_to_ascii_up[scancode], (BLACK << 4) + LIGHT_PURPLE);
+		}
+
     	}
 	//print_char(scancode, (BLACK << 4) + PURPLE);
 	//print_int((u32)scancode);	
