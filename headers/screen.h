@@ -30,6 +30,9 @@
 #define YELLOW		0xe
 #define WHITE		0xf
 
+// Global Color selector
+extern	s32 BG_COLOR;
+extern	s32 FG_COLOR;
 
 // print functions
 void	print_char(u8 c, u8 color);

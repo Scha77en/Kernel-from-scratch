@@ -65,6 +65,15 @@ run_kernel() {
         $IMAGE_NAME
 }
 
+hostrun() {
+    if [ ! -f kernel.img ]; then
+        print_error "kernel.img not found in current directory. Build it first!"
+        exit 1
+    fi
+    print_info "Running QEMU on host using kernel.img ..."
+    qemu-system-i386 -drive file=kernel.img,format=raw -m 256M
+}
+
 # Run kernel in background
 run_detach() {
     print_info "Starting KFS-1 kernel in background..."
@@ -119,6 +128,9 @@ case "${1:-help}" in
         ;;
     run)
         run_kernel
+        ;;
+    hostrun)
+        hostrun
         ;;
     run-detach)
         run_detach

@@ -80,7 +80,7 @@ setup_segments:
 	call main
 
 	; Hang if kernel returns
-	hlt ;
+	jmp $
 
 section .bss
 align 16

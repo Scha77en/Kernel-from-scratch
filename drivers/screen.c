@@ -1,5 +1,8 @@
 #include "../headers/screen.h"
 
+s32 BG_COLOR = BLACK;
+s32 FG_COLOR = CYAN;
+
 static u8	c_rows = 0;
 static u8	c_cols = 0;
 
