@@ -1,0 +1,30 @@
+# .dockerignore file for KFS-1
+
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts (will be regenerated)
+build/
+*.o
+*.elf
+*.bin
+*.iso
+*.dis
+os-image
+
+# IDE and editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation (reduce image size)
+*.md
+LICENSE
+README.md
+
+# Large files
+*.img
+*.iso

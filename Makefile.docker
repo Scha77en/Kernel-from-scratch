@@ -1,0 +1,52 @@
+# Build and test KFS-1 in Docker
+
+.PHONY: docker-build docker-run docker-shell docker-clean docker-logs
+
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t kfs1-kernel:latest -f Dockerfile .
+
+docker-run:
+	@echo "Running KFS-1 kernel..."
+	docker run -it --rm \
+		-v $(PWD):/workspace/kfs-1 \
+		--device /dev/kvm \
+		kfs1-kernel:latest
+
+docker-run-detach:
+	@echo "Running KFS-1 in background..."
+	docker run -d \
+		--name kfs1-runner \
+		-v $(PWD):/workspace/kfs-1 \
+		--device /dev/kvm \
+		kfs1-kernel:latest
+
+docker-shell:
+	@echo "Opening shell in Docker container..."
+	docker run -it --rm \
+		-v $(PWD):/workspace/kfs-1 \
+		kfs1-kernel:latest /bin/bash
+
+docker-logs:
+	@docker logs -f kfs1-runner
+
+docker-stop:
+	@docker stop kfs1-runner || true
+
+docker-clean:
+	@echo "Cleaning Docker resources..."
+	docker stop kfs1-runner 2>/dev/null || true
+	docker rm kfs1-runner 2>/dev/null || true
+	docker rmi kfs1-kernel:latest 2>/dev/null || true
+	docker system prune -f
+
+# Add to your existing Makefile
+help-docker:
+	@echo "Docker targets:"
+	@echo "  make docker-build      - Build Docker image"
+	@echo "  make docker-run        - Run kernel in Docker (interactive)"
+	@echo "  make docker-shell      - Open shell in Docker container"
+	@echo "  make docker-logs       - View Docker logs"
+	@echo "  make docker-stop       - Stop Docker container"
+	@echo "  make docker-clean      - Clean Docker resources"
+

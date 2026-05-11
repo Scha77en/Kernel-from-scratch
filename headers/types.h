@@ -10,4 +10,9 @@ typedef signed int		s32;
 typedef unsigned long long	u64;
 typedef signed long long	s64;
 
+typedef unsigned char	bool;
+#define true	1;
+#define false	0;
+
+
 #endif
