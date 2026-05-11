@@ -21,7 +21,7 @@ static const u8 scancode_to_ascii_caps[87] = {0, 0, '1', '2', '3', '4', '5', '6'
 
 
 
-static bool	getascii(u8 code) {
+static _bool	getascii(u8 code) {
 	if (code > 0x57 || scancode_to_ascii_low[code] == 0) {
 		//print_string("return false", (BLACK << 4) + LIGHT_RED);
 		return false;
@@ -34,20 +34,20 @@ void	keyboard_handler(void) {
 	FG_COLOR = CYAN;
 	u8 scancode = inb(0x60); // reading byte from keyboard data port 0x60
 	
-	print_hex((u32)scancode);
+	//print_hex((u32)scancode);
 
 	if (scancode == 0x2A || scancode == 0x36)
 		shift = 1;
 	else if (scancode == 0x3A)
-		caps = 1;
+		caps = !caps;
 	else if (scancode == 0xAA || scancode == 0xB6)
 		shift = 0;
-	else if (scancode == 0xBA)
-		caps = 1;
+
+	
 		
 	if (!(scancode & 0x80)) {  // Bit 7 clear = key press
-		print_hex((u32)scancode);
-		print_char(scancode_to_ascii_low[2], (BLACK << 4) + LIGHT_BLUE);
+		//print_hex((u32)scancode);
+		//print_char(scancode_to_ascii_low[2], (BLACK << 4) + LIGHT_BLUE);
 		if (getascii(scancode)) {
 			if ((!caps && !shift) || (caps && shift))
 				print_char(scancode_to_ascii_low[scancode], (BG_COLOR << 4) + FG_COLOR);

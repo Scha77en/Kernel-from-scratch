@@ -7,7 +7,7 @@ void	timer_handler(void) {
 	return ;
 }
 
-static bool vectors[IDT_MAX_DESCRIPTORS];
+static _bool vectors[IDT_MAX_DESCRIPTORS];
 
 extern void* isr_stub_table[];
 
@@ -20,7 +20,7 @@ void	interrupt_handler(u32 irq_num) {
 		return ;
 	}
 	else if (irq_num == 33) {
-		print_string("Inside 33!!", (BLACK << 4) + YELLOW);
+		//print_string("Inside 33!!", (BLACK << 4) + YELLOW);
 		keyboard_handler();
 		return ;
 	}
