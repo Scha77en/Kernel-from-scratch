@@ -30,6 +30,13 @@
 #define YELLOW		0xe
 #define WHITE		0xf
 
+typedef struct screens {
+	u8	c_cols;
+	u8	c_rows;
+	u8	buffer[VGA_MAX_CHAR * 2];
+} screen_t;
+
+
 // Global Color selector
 extern	s32 BG_COLOR;
 extern	s32 FG_COLOR;
@@ -47,6 +54,7 @@ void	clear_screen(void);
 void	scroll_screen(void);
 void	mem_move(u16 *dst, u16 *src, u8 len);
 void	backspace(u8 color);
+void	switch_screen(s8 screen_id);
 
 // arrows functions
 void	arrow_up(void);

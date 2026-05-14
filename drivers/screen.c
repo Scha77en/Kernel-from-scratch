@@ -6,7 +6,8 @@ s32 FG_COLOR = CYAN;
 static u8		c_rows = 0;
 static u8		c_cols = 0;
 static screen_t		buffer[3];
-static u8		screen_tracker = 0;
+
+static screen_t	display[3];
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
@@ -60,6 +61,16 @@ void	print_int(s32 num) {
 	while (i > 0) {
 		print_char(buffer[--i], WHITE_ON_BLACK);
 	}
+}
+
+void	switch_screen(s8 screen_id) {
+	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
+	for (u8 i = 0; i < VGA_MAX_CHAR; i + 2) {
+		*video++ = display[screen_id].buffer[i];
+		*video = display[screen_id].buffer[i + 1];
+	}
+	c_cols = display[screen_id].c_cols;
+	c_rows = display[screen_id].c_rows;
 }
 
 void	print_char(u8 c, u8 color) {
@@ -211,3 +222,4 @@ void	arrow_right(void) {
 	}
 	return ;
 }
+
