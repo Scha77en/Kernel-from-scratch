@@ -1,0 +1,24 @@
+c_cols;
+c_rows;
+
+arrow up;
+
+-> c_rows > 0 ==> c_rows--;
+-> c_rows = 0 ==> nothing;
+
+arrow down;
+
+-> c_rows < 24 ==> c_rows++;
+-> c_rows = 24  == nothing;
+
+arrow left;
+
+-> c_cols > 0 ==> c_cols--;
+-> c_cols = 0 ==> c_rows > 0 ==> c_rows--, c_cols = 79;
+-> c_cols = 0 ==> c_rows = 0 ==> nothing;
+
+arrow right;
+
+-> c_cols < 79 ==> c_cols++;
+-> c_cols < 79 ==> c_rows < 24 ==> c_rows++, c_cols = 0;
+-> c_cols < 79 ==> c_rows = 24 => nothing;

@@ -34,6 +34,8 @@
 extern	s32 BG_COLOR;
 extern	s32 FG_COLOR;
 
+int	arr[screens];
+
 // print functions
 void	print_char(u8 c, u8 color);
 void	print_string(s8 *str, u8 color);
@@ -45,6 +47,12 @@ void	clear_screen(void);
 void	scroll_screen(void);
 void	mem_move(u16 *dst, u16 *src, u8 len);
 void	backspace(u8 color);
+
+// arrows functions
+void	arrow_up(void);
+void	arrow_down(void);
+void	arrow_right(void);
+void	arrow_left(void);
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4

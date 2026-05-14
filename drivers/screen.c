@@ -3,8 +3,10 @@
 s32 BG_COLOR = BLACK;
 s32 FG_COLOR = CYAN;
 
-static u8	c_rows = 0;
-static u8	c_cols = 0;
+static u8		c_rows = 0;
+static u8		c_cols = 0;
+static screen_t		buffer[3];
+static u8		screen_tracker = 0;
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
@@ -117,7 +119,7 @@ void	mem_move(u16 *dst, u16 *src, u8 len) {
 }
 
 static void	find_end_c_cols(void) {
-	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (--c_rows * MAX_COLS + 0) * 2;
+	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (--c_rows * MAX_COLS) * 2;
 	u8	i = 0;
 
 	c_cols = 0;
@@ -150,4 +152,62 @@ void	backspace(u8 color) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
 	*video++ = ' ';
 	*video = color;
+}
+
+
+/*
+ 
+ 			- - - Arrow Functions ---
+ 
+ */
+
+
+u8	last_char(void) {
+	
+}
+
+void	arrow_up(void) {
+	if (c_rows > 0){
+		c_rows--;
+		find_end_c_cols();
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	return ;
+}
+
+
+void	arrow_down(void) {
+	if (c_rows < MAX_COLS - 1) {
+		c_rows++;
+		find_end_c_cols();
+
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	return ;
+}
+
+void	arrow_left(void) {
+	if (c_cols > 0) {
+		c_cols--;
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	else if (c_cols == 0 && c_rows > 0) {
+		c_rows--;
+		find_end_c_cols();
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	return ;
+}
+
+void	arrow_right(void) {
+	if (c_cols < MAX_COLS - 1) {
+		c_cols++;
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	else if (c_cols == MAX_COLS - 1 && c_rows < MAX_ROWS - 1) {
+		c_rows++;
+		find_end_c_cols();
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	}
+	return ;
 }
