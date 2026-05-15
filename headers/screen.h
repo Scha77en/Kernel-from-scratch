@@ -38,10 +38,10 @@ typedef struct screens {
 
 
 // Global Color selector
-extern	s32 BG_COLOR;
-extern	s32 FG_COLOR;
+extern s32	BG_COLOR;
+extern s32	FG_COLOR;
 
-int	arr[screens];
+extern s8	screen_tracker;
 
 // print functions
 void	print_char(u8 c, u8 color);
@@ -54,7 +54,7 @@ void	clear_screen(void);
 void	scroll_screen(void);
 void	mem_move(u16 *dst, u16 *src, u8 len);
 void	backspace(u8 color);
-void	switch_screen(s8 screen_id);
+void	switch_screen(void);
 
 // arrows functions
 void	arrow_up(void);

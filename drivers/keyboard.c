@@ -4,7 +4,6 @@ static u8	buff_pos = 0;
 static u8	shift = 0;
 static u8	caps = 0;
 static u8	cntl = 0;
-static s8	screen_tracker = 0;
 
 static const u8 scancode_to_ascii_low[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
 				'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j',
@@ -56,12 +55,12 @@ static void	cntl_handler(u8 scancode) {
 		case 0x4D:
 			if (++screen_tracker > 2)
 				screen_tracker = 0;
-			switch_screen(screen_tracker);
+			switch_screen();
 			break;
 		case 0x4B:
 			if (--screen_tracker < 0)
 				screen_tracker = 2;
-			switch_screen(screen_tracker);
+			switch_screen();
 			break;
 		default:
 			return ;
@@ -93,9 +92,9 @@ void	keyboard_handler(void) {
 		if (getascii(scancode)) {
 			if (!cntl && (scancode == 0x48 || scancode == 0x50 || scancode == 0x4D || scancode == 0x4B))
 				handle_arrow(scancode);
-			if (cntl && scancode != 0x1D && scancode != 0x9D)
+			else if (cntl && scancode != 0x1D && scancode != 0x9D)
 				cntl_handler(scancode);
-			if ((!caps && !shift) || (caps && shift))
+			else if ((!caps && !shift) || (caps && shift))
 				print_char(scancode_to_ascii_low[scancode], (BG_COLOR << 4) + FG_COLOR);
 			else {
 				if (shift)

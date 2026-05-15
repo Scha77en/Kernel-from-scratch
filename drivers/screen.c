@@ -5,9 +5,8 @@ s32 FG_COLOR = CYAN;
 
 static u8		c_rows = 0;
 static u8		c_cols = 0;
-static screen_t		buffer[3];
-
-static screen_t	display[3];
+static screen_t		display[3];
+u8			screen_tracker = 0;
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
@@ -63,18 +62,20 @@ void	print_int(s32 num) {
 	}
 }
 
-void	switch_screen(s8 screen_id) {
+void	switch_screen(void) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
 	for (u8 i = 0; i < VGA_MAX_CHAR; i + 2) {
-		*video++ = display[screen_id].buffer[i];
-		*video = display[screen_id].buffer[i + 1];
+		*video++ = display[screen_tracker].buffer[i];
+		*video = display[screen_tracker].buffer[i + 1];
 	}
-	c_cols = display[screen_id].c_cols;
-	c_rows = display[screen_id].c_rows;
+	c_cols = display[screen_tracker].c_cols;
+	c_rows = display[screen_tracker].c_rows;
+	move_cursor((c_rows * MAX_COLS + c_cols));
 }
 
 void	print_char(u8 c, u8 color) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
+	volatile u8 *display_buff = (volatile u8 *)display[screen_tracker].buffer[0] + (c_rows * MAX_COLS + c_cols) * 2;
 
 	if (c == '\n') {
 		c_rows++;
@@ -92,6 +93,9 @@ void	print_char(u8 c, u8 color) {
 	}
 	*video++ = c;
 	*video = color;
+	*display_buff++ = c;
+	*display_buff = color;
+
 	c_cols++;
 	if (c_cols >= MAX_COLS) {
 		c_cols = 0;
@@ -102,6 +106,8 @@ void	print_char(u8 c, u8 color) {
 		}
 	}
 	move_cursor((c_rows * MAX_COLS + c_cols));
+	display[screen_tracker].c_cols = c_cols;
+	display[screen_tracker].c_rows = c_rows;
 }
 
 void	print_string(s8 *str, u8 color) {
@@ -118,6 +124,7 @@ void	print_string(s8 *str, u8 color) {
 void	scroll_screen(void) {
 	for (u8 i = 1; i < MAX_ROWS; i++){
 		mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
+		mem_move(((u16 *)display[screen_tracker].buffer[0] + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
 	}
 }
 
