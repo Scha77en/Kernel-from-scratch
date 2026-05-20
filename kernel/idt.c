@@ -64,17 +64,17 @@ void idt_init(void) {
     idtr_t verify_idtr;
     __asm__ volatile ("sidt %0" : "=m"(verify_idtr));
     
-    print_string((u8 *)"IDT Base loaded: ", WHITE_ON_BLACK);
-    print_hex(verify_idtr.base);
-    print_char('\n', WHITE_ON_BLACK);
+    //print_string((u8 *)"IDT Base loaded: ", WHITE_ON_BLACK);
+    //print_hex(verify_idtr.base);
+    //print_char('\n', WHITE_ON_BLACK);
     
-    print_string((u8 *)"IDT Limit loaded: ", WHITE_ON_BLACK);
-    print_hex(verify_idtr.limit);
-    print_char('\n', WHITE_ON_BLACK);
+    //print_string((u8 *)"IDT Limit loaded: ", WHITE_ON_BLACK);
+    //print_hex(verify_idtr.limit);
+    //print_char('\n', WHITE_ON_BLACK);
     
-    print_string((u8 *)"ISR stub 33 addr: ", WHITE_ON_BLACK);
-    print_hex((u32)isr_stub_table[33]);
-    print_char('\n', WHITE_ON_BLACK);
+    //print_string((u8 *)"ISR stub 33 addr: ", WHITE_ON_BLACK);
+    //print_hex((u32)isr_stub_table[33]);
+    //print_char('\n', WHITE_ON_BLACK);
     
     __asm__ volatile ("sti");
 }

@@ -6,7 +6,7 @@ s32 FG_COLOR = CYAN;
 static u8		c_rows = 0;
 static u8		c_cols = 0;
 static screen_t		display[3];
-u8			screen_tracker = 0;
+s32			screen_tracker = 0;
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
@@ -136,35 +136,59 @@ void	mem_move(u16 *dst, u16 *src, u8 len) {
 	}	
 }
 
-static void	find_end_c_cols(void) {
-	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (--c_rows * MAX_COLS) * 2;
+/**
+ * find_end_c_cols - find the last char in a row.
+ * @arrow: handling 3 modes, mode 0 handles backspace key and left arrow,
+ * 	   mode 1 handles the up and down arrow keys.
+ * 	   mode 2 handles the right arrow key.
+ *
+ * Return: false always for mode 0 and 1, and
+ * return true for mode 2 when there is no char left on the current row and
+ * its true to move to the next row if MAX_ROWS not reached yet.
+ */
+static bool	find_end_c_cols(u8 arrow) {
+	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS) * 2;
 	u8	i = 0;
+	u8	cols_state = c_cols;
 
-	c_cols = 0;
-	while (*video != '\n' && c_cols < MAX_COLS) {
-		if (*video == ' ') {
+	if (arrow == 2) {
+		i = c_cols;
+		video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2; 
+		while (*video == ' ') {
 			video += 2;
 			i++;
-			while (*video == ' ') {
-				i++;
-				video += 2;
-				if (i >= MAX_COLS)
-					return ;
+			if (i >= MAX_COLS)
+				return true;
+		}
+		return false;
+	}
+	c_cols = 0;
+	while (*video != '\n' && i < MAX_COLS) {
+		while (*video == ' ') {
+			video += 2;
+			i++;
+			if (i >= MAX_COLS) {
+				if (c_cols > cols_state && arrow)
+					c_cols = cols_state;
+				return false;
 			}
 		}
-		else {
-			video += 2;	
-			i++;
-			c_cols = i;
-		}
+		video += 2;
+		c_cols = i;
+		i++;
 	}
+	if (c_cols > cols_state && arrow)
+		c_cols = cols_state;
+	return false;
 }
 
 void	backspace(u8 color) {
 	if (c_cols > 0)
 		c_cols--;
-	else if (c_cols == 0 && c_rows > 0)
-		find_end_c_cols();
+	else if (c_cols == 0 && c_rows > 0) {
+		c_rows--;
+		find_end_c_cols(0);
+	}
 	move_cursor((c_rows * MAX_COLS + c_cols));
 
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
@@ -179,25 +203,19 @@ void	backspace(u8 color) {
  
  */
 
-
-u8	last_char(void) {
-	
-}
-
 void	arrow_up(void) {
-	if (c_rows > 0){
+	if (c_rows > 0) {
 		c_rows--;
-		find_end_c_cols();
+		find_end_c_cols(1);
 		move_cursor((c_rows * MAX_COLS + c_cols));
 	}
 	return ;
 }
 
-
 void	arrow_down(void) {
-	if (c_rows < MAX_COLS - 1) {
+	if (c_rows < MAX_ROWS - 1) {
 		c_rows++;
-		find_end_c_cols();
+		find_end_c_cols(1);
 
 		move_cursor((c_rows * MAX_COLS + c_cols));
 	}
@@ -206,25 +224,39 @@ void	arrow_down(void) {
 
 void	arrow_left(void) {
 	if (c_cols > 0) {
+		//print_int((u32) c_cols);
 		c_cols--;
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+		//print_int((u32) c_cols);
 	}
 	else if (c_cols == 0 && c_rows > 0) {
 		c_rows--;
-		find_end_c_cols();
+		find_end_c_cols(0);
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+		//print_int((u32) c_rows);
 	}
 	return ;
 }
 
 void	arrow_right(void) {
-	if (c_cols < MAX_COLS - 1) {
+	if ((c_cols + 1) < MAX_COLS) {
 		c_cols++;
-		move_cursor((c_rows * MAX_COLS + c_cols));
+		u8 check = find_end_c_cols(2);
+		if (check && c_rows < MAX_ROWS - 1) {
+			c_rows++;
+			c_cols = 0;
+			move_cursor((c_rows * MAX_COLS + c_cols));
+		}
+		else if (c_cols < MAX_COLS && (c_rows < MAX_ROWS - 1 || !check))
+			move_cursor((c_rows * MAX_COLS + c_cols));
+		else
+			c_cols--;
 	}
 	else if (c_cols == MAX_COLS - 1 && c_rows < MAX_ROWS - 1) {
 		c_rows++;
-		find_end_c_cols();
+		c_cols = 0;
 		move_cursor((c_rows * MAX_COLS + c_cols));
 	}
 	return ;

@@ -41,7 +41,7 @@ typedef struct screens {
 extern s32	BG_COLOR;
 extern s32	FG_COLOR;
 
-extern s8	screen_tracker;
+extern s32	screen_tracker;
 
 // print functions
 void	print_char(u8 c, u8 color);
