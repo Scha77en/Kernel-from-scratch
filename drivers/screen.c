@@ -3,20 +3,21 @@
 s32 BG_COLOR = BLACK;
 s32 FG_COLOR = CYAN;
 
-static u8		c_rows = 0;
-static u8		c_cols = 0;
+static u32		c_rows = 0;
+static u32		c_cols = 0;
 static screen_t		display[3];
 s32			screen_tracker = 0;
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
 	u16	blank = 0x0F20;
+	//u16	blank = ' ';
 
 	c_rows = 0;
 	c_cols = 0;
 	move_cursor(0);
 
-	for (u16 i = 0; i < VGA_MAX_CHAR; i++) {
+	for (u16 i = 0; i < VGA_MAX_CHAR * 2; i++) {
 		video[i] = blank;
 	}
 }
@@ -63,19 +64,23 @@ void	print_int(s32 num) {
 }
 
 void	switch_screen(void) {
+	clear_screen();
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
-	for (u8 i = 0; i < VGA_MAX_CHAR; i + 2) {
+	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		*video++ = display[screen_tracker].buffer[i];
-		*video = display[screen_tracker].buffer[i + 1];
+		*video++ = display[screen_tracker].buffer[i + 1];
 	}
 	c_cols = display[screen_tracker].c_cols;
 	c_rows = display[screen_tracker].c_rows;
 	move_cursor((c_rows * MAX_COLS + c_cols));
+	//print_buffer_sc();
+	//print_int(screen_tracker);
+	//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
 }
 
 void	print_char(u8 c, u8 color) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
-	volatile u8 *display_buff = (volatile u8 *)display[screen_tracker].buffer[0] + (c_rows * MAX_COLS + c_cols) * 2;
+	u32	i = (c_rows * MAX_COLS + c_cols) * 2;
 
 	if (c == '\n') {
 		c_rows++;
@@ -85,6 +90,7 @@ void	print_char(u8 c, u8 color) {
 			scroll_screen();
 		}
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_rows = c_rows;
 		return ;
 	}
 	else if (c == '\b') {
@@ -93,8 +99,8 @@ void	print_char(u8 c, u8 color) {
 	}
 	*video++ = c;
 	*video = color;
-	*display_buff++ = c;
-	*display_buff = color;
+	display[screen_tracker].buffer[i++] = c;
+	display[screen_tracker].buffer[i] = color;
 
 	c_cols++;
 	if (c_cols >= MAX_COLS) {
@@ -124,7 +130,7 @@ void	print_string(s8 *str, u8 color) {
 void	scroll_screen(void) {
 	for (u8 i = 1; i < MAX_ROWS; i++){
 		mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
-		mem_move(((u16 *)display[screen_tracker].buffer[0] + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
+		mem_move(((u16 *)display[screen_tracker].buffer + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
 	}
 }
 
@@ -190,10 +196,15 @@ void	backspace(u8 color) {
 		find_end_c_cols(0);
 	}
 	move_cursor((c_rows * MAX_COLS + c_cols));
+	display[screen_tracker].c_cols = c_cols;
+	display[screen_tracker].c_rows = c_rows;
 
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
+	volatile u8 *display_buff = (volatile u8 *)display[screen_tracker].buffer[0] + (c_rows * MAX_COLS + c_cols) * 2;
 	*video++ = ' ';
 	*video = color;
+	*display_buff++ = ' ';
+	*display_buff = color;
 }
 
 
@@ -208,6 +219,8 @@ void	arrow_up(void) {
 		c_rows--;
 		find_end_c_cols(1);
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
 	}
 	return ;
 }
@@ -218,6 +231,8 @@ void	arrow_down(void) {
 		find_end_c_cols(1);
 
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
 	}
 	return ;
 }
@@ -227,6 +242,8 @@ void	arrow_left(void) {
 		//print_int((u32) c_cols);
 		c_cols--;
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
 		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
 		//print_int((u32) c_cols);
 	}
@@ -234,6 +251,8 @@ void	arrow_left(void) {
 		c_rows--;
 		find_end_c_cols(0);
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
 		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
 		//print_int((u32) c_rows);
 	}
@@ -248,9 +267,14 @@ void	arrow_right(void) {
 			c_rows++;
 			c_cols = 0;
 			move_cursor((c_rows * MAX_COLS + c_cols));
+			display[screen_tracker].c_cols = c_cols;
+			display[screen_tracker].c_rows = c_rows;
 		}
-		else if (c_cols < MAX_COLS && (c_rows < MAX_ROWS - 1 || !check))
+		else if (c_cols < MAX_COLS && (c_rows < MAX_ROWS - 1 || !check)) {
 			move_cursor((c_rows * MAX_COLS + c_cols));
+			display[screen_tracker].c_cols = c_cols;
+			display[screen_tracker].c_rows = c_rows;
+		}
 		else
 			c_cols--;
 	}
@@ -258,7 +282,30 @@ void	arrow_right(void) {
 		c_rows++;
 		c_cols = 0;
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
 	}
 	return ;
 }
 
+void	print_buffer_sc(void) {
+	print_int(screen_tracker);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	print_int(c_rows);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	print_int(display[screen_tracker].c_rows);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	print_hex(display[screen_tracker].buffer[0]);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	print_int(display[screen_tracker].buffer[3]);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	print_int((BG_COLOR << 4) + FG_COLOR);
+	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+	for (u8 i = 0; i < 200; i += 2) {
+		/*if (i < 20) {
+			print_hex(display[screen_tracker].buffer[i]);
+			print_hex(display[screen_tracker].buffer[i + 1]);
+		}*/
+		print_char(display[0].buffer[i], display[0].buffer[i + 1]);
+	}
+}

@@ -31,8 +31,8 @@
 #define WHITE		0xf
 
 typedef struct screens {
-	u8	c_cols;
-	u8	c_rows;
+	u32	c_cols;
+	u32	c_rows;
 	u8	buffer[VGA_MAX_CHAR * 2];
 } screen_t;
 
@@ -48,6 +48,8 @@ void	print_char(u8 c, u8 color);
 void	print_string(s8 *str, u8 color);
 void	print_int(s32 num);
 void	print_hex(u32 num);
+
+void	print_buffer_sc(void);
 
 // screen operations functions
 void	clear_screen(void);

@@ -8,5 +8,9 @@ int main(void) {
 	PIC_remap(0x20, 0x28);
 	idt_init();
 
+
+	//print_string("wash a 3shiri hani mrta7 kolshi mzn\n", (BLACK << 4) + CYAN);
+
+	//print_buffer_sc();
 	return 0;
 }
