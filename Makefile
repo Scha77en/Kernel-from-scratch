@@ -9,7 +9,7 @@ GRUB_DIR = $(ISO_ROOT)/boot/grub
 CC = gcc -g
 ASM = nasm
 LD = ld
-QEMU = qemu-system-i386
+QEMU = qemu-system-i386 -vnc 0.0.0.0:0
 GRUB_MKRESCUE = grub-mkrescue
 
 # === Source Files ===

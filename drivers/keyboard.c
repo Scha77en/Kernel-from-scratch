@@ -21,8 +21,7 @@ static const u8 scancode_to_ascii_caps[87] = {0, 0, '1', '2', '3', '4', '5', '6'
 				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
 
 
-
-static _bool	getascii(u8 code) {
+_bool	getascii(u8 code) {
 	if (code > 0x57 || scancode_to_ascii_low[code] == 0) {
 		//print_string("return false", (BLACK << 4) + LIGHT_RED);
 		return false;

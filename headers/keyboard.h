@@ -12,5 +12,6 @@ typedef struct {
 } key_event;
 
 void	keyboard_handler(void);
+_bool	getascii(u8 code);
 
 #endif

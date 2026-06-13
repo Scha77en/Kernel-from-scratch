@@ -1,8 +1,9 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "../headers/types.h"
-#include "../headers/low_level.h"
+#include "types.h"
+#include "low_level.h"
+#include "keyboard.h" 
 
 #define VIDEO_ADDRESS 0xb8000
 #define MAX_ROWS 25
@@ -57,6 +58,8 @@ void	scroll_screen(void);
 void	mem_move(u16 *dst, u16 *src, u8 len);
 void	backspace(u8 color);
 void	switch_screen(void);
+
+void	clear_buffers(void);
 
 // arrows functions
 void	arrow_up(void);

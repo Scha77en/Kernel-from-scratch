@@ -8,6 +8,15 @@ static u32		c_cols = 0;
 static screen_t		display[3];
 s32			screen_tracker = 0;
 
+void	clear_buffers(void) {
+	for (u32 j = 0; j < 3; j++) {
+		for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
+			display[j].buffer[i++] = 0x0F20;
+			display[j].buffer[i] = GREEN;
+		}
+	}
+}
+
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
 	u16	blank = 0x0F20;
@@ -17,8 +26,8 @@ void	clear_screen(void) {
 	c_cols = 0;
 	move_cursor(0);
 
-	for (u16 i = 0; i < VGA_MAX_CHAR * 2; i++) {
-		video[i] = blank;
+	for (u32 i = 0; i < VGA_MAX_CHAR; i++) {
+		*video++ = blank;
 	}
 }
 
@@ -73,6 +82,8 @@ void	switch_screen(void) {
 	c_cols = display[screen_tracker].c_cols;
 	c_rows = display[screen_tracker].c_rows;
 	move_cursor((c_rows * MAX_COLS + c_cols));
+	//print_hex((u32) display[screen_tracker].buffer[10]);
+	//print_hex((u32) c_rows * MAX_COLS + c_cols);
 	//print_buffer_sc();
 	//print_int(screen_tracker);
 	//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
@@ -90,6 +101,7 @@ void	print_char(u8 c, u8 color) {
 			scroll_screen();
 		}
 		move_cursor((c_rows * MAX_COLS + c_cols));
+		display[screen_tracker].c_cols = c_cols;
 		display[screen_tracker].c_rows = c_rows;
 		return ;
 	}
@@ -152,7 +164,7 @@ void	mem_move(u16 *dst, u16 *src, u8 len) {
  * return true for mode 2 when there is no char left on the current row and
  * its true to move to the next row if MAX_ROWS not reached yet.
  */
-static bool	find_end_c_cols(u8 arrow) {
+static _bool	find_end_c_cols(u8 arrow) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS) * 2;
 	u8	i = 0;
 	u8	cols_state = c_cols;

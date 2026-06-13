@@ -5,6 +5,7 @@
 
 int main(void) {
 	clear_screen();
+	clear_buffers();
 	PIC_remap(0x20, 0x28);
 	idt_init();
 
