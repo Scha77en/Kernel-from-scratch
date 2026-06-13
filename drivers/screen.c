@@ -140,9 +140,13 @@ void	print_string(s8 *str, u8 color) {
 }
 
 void	scroll_screen(void) {
-	for (u8 i = 1; i < MAX_ROWS; i++){
+	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
+	for (u32 i = 1; i < MAX_ROWS; i++){
 		mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
-		mem_move(((u16 *)display[screen_tracker].buffer + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
+	}
+	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
+		display[screen_tracker].buffer[i] = *video++;
+		display[screen_tracker].buffer[i + 1] = *video++;
 	}
 }
 

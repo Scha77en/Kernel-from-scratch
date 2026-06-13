@@ -6,7 +6,7 @@ ISO_ROOT = iso_root
 GRUB_DIR = $(ISO_ROOT)/boot/grub
 
 # === Compiler and Tools ===
-CC = gcc -g
+CC = gcc
 ASM = nasm
 LD = ld
 QEMU = qemu-system-i386 -vnc 0.0.0.0:0
@@ -21,17 +21,12 @@ ALL_OBJECTS = $(ASM_OBJECTS) $(C_OBJECTS)
 
 # === Compilation Flags ===
 CFLAGS = \
-    -m32                    \
-    -fno-pic                \
-    -fno-pie                \
-    -ffreestanding          \
-    -fno-builtin            \
-    -fno-stack-protector    \
-    -Wall                   \
-    -Wextra                 \
-    -I$(HEADERS_DIR)        \
-    -nostdlib               \
-    -nodefaultlibs
+	-m32 \
+	-fno-builtin  \
+	-fno-stack-protector    \
+	-I$(HEADERS_DIR)       \
+	-nostdlib               \
+	-nodefaultlibs	\
 
 LDFLAGS = -m elf_i386 -T linker.ld
 
@@ -50,11 +45,12 @@ $(OBJ_DIR)/%.o: %.c build
 
 # Assemble ASM files
 $(OBJ_DIR)/%.o: %.asm build
-	$(ASM) -f elf -o $@ $<
+	$(ASM) -f elf32 -o $@ $<
 
 # Link everything into ELF kernel
 kernel.elf: $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^
+	strip -s kernel.elf
 	@echo "✓ Kernel compiled: kernel.elf"
 
 # Build bootable ISO
@@ -63,7 +59,7 @@ iso: kernel.elf build
 	@mkdir -p $(GRUB_DIR)
 	@cp kernel.elf $(ISO_ROOT)/boot/kernel.elf
 	@cp boot/grub/grub.cfg $(GRUB_DIR)/grub.cfg
-	$(GRUB_MKRESCUE) -o kfs.iso $(ISO_ROOT)
+	$(GRUB_MKRESCUE) -o kfs.iso $(ISO_ROOT) --compress=xz --install-modules="multiboot"
 	@echo "✓ Bootable ISO created: kfs.iso"
 
 # Run ISO in QEMU
