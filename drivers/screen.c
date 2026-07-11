@@ -8,6 +8,50 @@ static u32		c_cols = 0;
 static screen_t		display[3];
 s32			screen_tracker = 0;
 
+
+// --- commands handlers ---
+
+static u8	strncmp(char *s1, char *s2, u8 n)
+{
+	u8	i;
+
+	i = 0;
+	while (i < n && (s1[i] || s2[i])) {
+		if (((char *)s1)[i] != ((char *)s2)[i])
+			return (((char *)s1)[i] - ((char *)s2)[i]);
+		i++;
+	}
+	return (0);
+}
+
+static void	handle_fg(void) {
+	print_string("handling FG\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	handle_bg(void) {
+	print_string("handling BG\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	handle_color(void) {
+	print_string("handling color\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	handle_clear(void) {
+	print_string("handling clear\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	handle_reboot(void) {
+	print_string("handling reboot\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	print_stack(void) {
+	print_string("handling print_stack\n", (BG_COLOR << 4) + GREEN);
+}
+
+static void	print_gdt(void) {
+	print_string("handling gdt\n", (BG_COLOR << 4) + GREEN);
+}
+
 void	clear_buffers(void) {
 	for (u32 j = 0; j < 3; j++) {
 		for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
@@ -16,6 +60,8 @@ void	clear_buffers(void) {
 		}
 	}
 }
+
+// ------------------------------
 
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
@@ -83,6 +129,56 @@ void	switch_screen(void) {
 	move_cursor((c_rows * MAX_COLS + c_cols));
 }
 
+void	printk(char *format, ...) {
+	FG_COLOR = YELLOW;
+	va_list args;
+	va_start(args, format);
+
+	for (char *p = format; *p != '\0'; p++) {
+		if (*p == '%' && *(p + 1) != '\0') {
+			p++;
+			switch (*p) {
+				case 'd': {
+					int val = va_arg(args, int);
+					print_int(val);
+					break;
+				}
+				case 'u': {
+					unsigned int val = va_arg(args, unsigned int);
+					print_int((int)val);
+					break;
+				}
+				case 's': {
+					char *str = va_arg(args, char *);
+					if (!str) str = "(null)";
+					print_string(str, (BG_COLOR << 4) + FG_COLOR);
+					break;
+				}
+				case 'x': {
+					unsigned int val = va_arg(args, unsigned int);
+					print_hex(val);
+					break;
+				}
+				case 'c': {
+					char c = (char)va_arg(args, int);
+					print_char(c, (BG_COLOR << 4) + FG_COLOR);
+					break;
+				}
+				case '%': {
+					print_char('%', (BG_COLOR << 4) + FG_COLOR);
+					break;
+				}
+				default:
+					print_char('%', (BG_COLOR << 4) + FG_COLOR);
+					print_char(*p, (BG_COLOR << 4) + FG_COLOR);
+					break;
+			}
+		} else 
+			print_char(*p, (BG_COLOR << 4) + FG_COLOR);
+	}
+	va_end(args);
+}
+
 void	print_char(u8 c, u8 color) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
 	u32	i = (c_rows * MAX_COLS + c_cols) * 2;
@@ -97,17 +193,26 @@ void	print_char(u8 c, u8 color) {
 		move_cursor((c_rows * MAX_COLS + c_cols));
 		display[screen_tracker].c_cols = c_cols;
 		display[screen_tracker].c_rows = c_rows;
+		if (cmd) {
+			handle_command();
+			printk("%s", "kfs>");
+		}
 		return ;
 	}
 	else if (c == '\b') {
 		backspace(color);
 		return ;
 	}
+	if (cmd) {
+		if ((c_cols + 1) >= MAX_COLS)
+			return ;
+		display[screen_tracker].cmd[display[screen_tracker].c_cols - 5] = c;
+	}
 	*video++ = c;
 	*video = color;
 	display[screen_tracker].buffer[i++] = c;
 	display[screen_tracker].buffer[i] = color;
-
+	
 	c_cols++;
 	if (c_cols >= MAX_COLS) {
 		c_cols = 0;
@@ -127,6 +232,29 @@ void	print_string(s8 *str, u8 color) {
 		print_char(*str, color);
 		str++;
 	}
+}
+
+void	handle_command(void) {
+	cmd = false;
+	u8	*command = display[screen_tracker].cmd;
+
+	if (!strncmp(command, "FG", 2))
+		handle_fg();
+	else if (!strncmp(command, "BG", 2))
+		handle_bg();
+	else if (!strncmp(command, "color", 5))
+		handle_color();
+	else if (!strncmp(command, "clear", 5))
+		handle_clear();
+	else if (!strncmp(command, "p_stack", 7))
+		print_stack();
+	else if (!strncmp(command, "reboot", 6))
+		handle_reboot();
+	else if (!strncmp(command, "gdt", 2))
+		print_gdt();
+	else
+		print_string("command not found!\n", (BG_COLOR << 4) + RED);
+	return ;
 }
 
 void	scroll_screen(void) {
@@ -185,12 +313,14 @@ static _bool	find_end_c_cols(u8 arrow) {
 }
 
 void	backspace(u8 color) {
-	if (c_cols > 0)
+	if (c_cols > 4) {
+		display[screen_tracker].cmd[c_cols] = '\0';
 		c_cols--;
-	else if (c_cols == 0 && c_rows > 0) {
-		c_rows--;
-		find_end_c_cols(0);
 	}
+	//else if (c_cols == 0 && c_rows > 0) {
+	//	c_rows--;
+	//	find_end_c_cols(0);
+	//}
 	move_cursor((c_rows * MAX_COLS + c_cols));
 	display[screen_tracker].c_cols = c_cols;
 	display[screen_tracker].c_rows = c_rows;
@@ -294,3 +424,5 @@ void	print_buffer_sc(void) {
 		print_char(display[0].buffer[i], display[0].buffer[i + 1]);
 	}
 }
+
+

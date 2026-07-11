@@ -34,6 +34,7 @@ typedef struct screens {
 	u32	c_cols;
 	u32	c_rows;
 	u8	buffer[VGA_MAX_CHAR * 2];
+	u8	cmd[76];
 } screen_t;
 
 
@@ -49,7 +50,7 @@ void	print_int(s32 num);
 void	print_hex(u32 num);
 
 void	print_buffer_sc(void);
-
+void	printk(char *format, ...);
 // screen operations functions
 void	clear_screen(void);
 void	scroll_screen(void);
@@ -64,6 +65,9 @@ void	arrow_up(void);
 void	arrow_down(void);
 void	arrow_right(void);
 void	arrow_left(void);
+
+
+void	handle_command(void);
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4

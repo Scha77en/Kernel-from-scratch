@@ -102,7 +102,7 @@ setup_segments:
 	mov fs, ax
 	mov gs, ax
 
-    move ax, STACK_SEG
+    mov ax, STACK_SEG
 	mov ss, ax
 
 	extern main
