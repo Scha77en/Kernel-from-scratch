@@ -11,7 +11,7 @@ s32			screen_tracker = 0;
 void	clear_buffers(void) {
 	for (u32 j = 0; j < 3; j++) {
 		for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
-			display[j].buffer[i++] = 0x0F20;
+			display[j].buffer[i++] = 0x20;
 			display[j].buffer[i] = GREEN;
 		}
 	}
@@ -20,7 +20,6 @@ void	clear_buffers(void) {
 void	clear_screen(void) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
 	u16	blank = 0x0F20;
-	//u16	blank = ' ';
 
 	c_rows = 0;
 	c_cols = 0;
@@ -40,11 +39,11 @@ void	print_hex(u32 num) {
 	num >>= 4;
 	}
 
-	print_string((u8 *)buffer, WHITE_ON_BLACK);
+	print_string((s8 *)buffer, WHITE_ON_BLACK);
 }
 
 void	print_int(s32 num) {
-	char	buffer[12];  // -2147483648 max length
+	char	buffer[12];
 	int	i = 0;
 	int	is_negative = 0;
 
@@ -82,11 +81,6 @@ void	switch_screen(void) {
 	c_cols = display[screen_tracker].c_cols;
 	c_rows = display[screen_tracker].c_rows;
 	move_cursor((c_rows * MAX_COLS + c_cols));
-	//print_hex((u32) display[screen_tracker].buffer[10]);
-	//print_hex((u32) c_rows * MAX_COLS + c_cols);
-	//print_buffer_sc();
-	//print_int(screen_tracker);
-	//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
 }
 
 void	print_char(u8 c, u8 color) {
@@ -129,13 +123,9 @@ void	print_char(u8 c, u8 color) {
 }
 
 void	print_string(s8 *str, u8 color) {
-	//volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols);
-
 	while (*str != '\0') {
 		print_char(*str, color);
 		str++;
-		//*video++ = *str++;
-		//*video++ = color;
 	}
 }
 
@@ -158,16 +148,6 @@ void	mem_move(u16 *dst, u16 *src, u8 len) {
 	}	
 }
 
-/**
- * find_end_c_cols - find the last char in a row.
- * @arrow: handling 3 modes, mode 0 handles backspace key and left arrow,
- * 	   mode 1 handles the up and down arrow keys.
- * 	   mode 2 handles the right arrow key.
- *
- * Return: false always for mode 0 and 1, and
- * return true for mode 2 when there is no char left on the current row and
- * its true to move to the next row if MAX_ROWS not reached yet.
- */
 static _bool	find_end_c_cols(u8 arrow) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS) * 2;
 	u8	i = 0;
@@ -185,7 +165,7 @@ static _bool	find_end_c_cols(u8 arrow) {
 		return false;
 	}
 	c_cols = 0;
-	while (*video != '\n' && i < MAX_COLS) {
+	while (i < MAX_COLS) {
 		while (*video == ' ') {
 			video += 2;
 			i++;
@@ -216,7 +196,7 @@ void	backspace(u8 color) {
 	display[screen_tracker].c_rows = c_rows;
 
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
-	volatile u8 *display_buff = (volatile u8 *)display[screen_tracker].buffer[0] + (c_rows * MAX_COLS + c_cols) * 2;
+	volatile u8 *display_buff = (volatile u8 *)&display[screen_tracker].buffer[0] + (c_rows * MAX_COLS + c_cols) * 2;
 	*video++ = ' ';
 	*video = color;
 	*display_buff++ = ' ';
@@ -225,9 +205,7 @@ void	backspace(u8 color) {
 
 
 /*
- 
  			- - - Arrow Functions ---
- 
  */
 
 void	arrow_up(void) {
@@ -255,13 +233,10 @@ void	arrow_down(void) {
 
 void	arrow_left(void) {
 	if (c_cols > 0) {
-		//print_int((u32) c_cols);
 		c_cols--;
 		move_cursor((c_rows * MAX_COLS + c_cols));
 		display[screen_tracker].c_cols = c_cols;
 		display[screen_tracker].c_rows = c_rows;
-		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
-		//print_int((u32) c_cols);
 	}
 	else if (c_cols == 0 && c_rows > 0) {
 		c_rows--;
@@ -269,8 +244,6 @@ void	arrow_left(void) {
 		move_cursor((c_rows * MAX_COLS + c_cols));
 		display[screen_tracker].c_cols = c_cols;
 		display[screen_tracker].c_rows = c_rows;
-		//print_char('\n', (BG_COLOR << 4) + FG_COLOR);
-		//print_int((u32) c_rows);
 	}
 	return ;
 }
@@ -318,10 +291,6 @@ void	print_buffer_sc(void) {
 	print_int((BG_COLOR << 4) + FG_COLOR);
 	print_char('\n', (BG_COLOR << 4) + FG_COLOR);
 	for (u8 i = 0; i < 200; i += 2) {
-		/*if (i < 20) {
-			print_hex(display[screen_tracker].buffer[i]);
-			print_hex(display[screen_tracker].buffer[i + 1]);
-		}*/
 		print_char(display[0].buffer[i], display[0].buffer[i + 1]);
 	}
 }

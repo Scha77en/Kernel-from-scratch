@@ -11,7 +11,6 @@
 #define VGA_MAX_CHAR 2000
 
 
-// Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK	0x0f
 
 #define BLACK		0x0
@@ -38,7 +37,6 @@ typedef struct screens {
 } screen_t;
 
 
-// Global Color selector
 extern s32	BG_COLOR;
 extern s32	FG_COLOR;
 
