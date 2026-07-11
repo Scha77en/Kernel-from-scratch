@@ -81,11 +81,10 @@ void	keyboard_handler(void) {
 	
 	if (!(scancode & 0x80)) {
 		if (getascii(scancode)) {
-			//if (!cntl && (scancode == 0x48 || scancode == 0x50 || scancode == 0x4D || scancode == 0x4B)) {
-			//	handle_arrow(scancode);
-			//}
 			cmd = true;
-			if (cntl && scancode != 0x1D && scancode != 0x9D)
+			if (!cntl && (scancode == 0x48 || scancode == 0x50 || scancode == 0x4D || scancode == 0x4B)){
+			}
+			else if (cntl && scancode != 0x1D && scancode != 0x9D)
 				cntl_handler(scancode);
 			else if ((!caps && !shift) || (caps && shift))
 				print_char(scancode_to_ascii_low[scancode], (BG_COLOR << 4) + FG_COLOR);

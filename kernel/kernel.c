@@ -9,6 +9,5 @@ int main(void) {
 	PIC_remap(0x20, 0x28);
 	idt_init();
 
-	printk("%s", "kfs>");
 	return 0;
 }

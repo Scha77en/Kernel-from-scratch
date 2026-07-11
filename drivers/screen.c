@@ -18,10 +18,21 @@ static u8	strncmp(char *s1, char *s2, u8 n)
 	i = 0;
 	while (i < n && (s1[i] || s2[i])) {
 		if (((char *)s1)[i] != ((char *)s2)[i])
-			return (((char *)s1)[i] - ((char *)s2)[i]);
+			return 1;
 		i++;
 	}
 	return (0);
+}
+
+static	void	memcpy(u8 *dst, u8 *src, u32 n) {
+	u32	i = 0;
+
+	if (src == 0 && dst == 0)
+		return ;
+	while (i < n) {
+		dst[i] = src[i];
+		i++;
+	}
 }
 
 static void	handle_fg(void) {
@@ -30,10 +41,6 @@ static void	handle_fg(void) {
 
 static void	handle_bg(void) {
 	print_string("handling BG\n", (BG_COLOR << 4) + GREEN);
-}
-
-static void	handle_color(void) {
-	print_string("handling color\n", (BG_COLOR << 4) + GREEN);
 }
 
 static void	handle_clear(void) {
@@ -59,6 +66,31 @@ void	clear_buffers(void) {
 			display[j].buffer[i] = GREEN;
 		}
 	}
+	printk("kfs>");
+	for (u8 i = 0; i < 8; i++) {
+		if (i == 0)
+			display[1].buffer[i++] = 'k';
+		else if (i == 2)
+			display[1].buffer[i++] = 'f';
+		else if (i == 4)
+			display[1].buffer[i++] = 's';
+		else if (i == 6)
+			display[1].buffer[i++] = '>';
+		display[1].buffer[i] = (BG_COLOR << 4) + YELLOW;
+	}
+	for (u8 i = 0; i < 8; i++) {
+		if (i == 0)
+			display[2].buffer[i++] = 'k';
+		else if (i == 2)
+			display[2].buffer[i++] = 'f';
+		else if (i == 4)
+			display[2].buffer[i++] = 's';
+		else if (i == 6)
+			display[2].buffer[i++] = '>';
+		display[2].buffer[i] = (BG_COLOR << 4) + YELLOW;
+	}
+	display[1].c_cols = 4;
+	display[2].c_cols = 4;
 }
 
 // ------------------------------
@@ -206,7 +238,7 @@ void	print_char(u8 c, u8 color) {
 	if (cmd) {
 		if ((c_cols + 1) >= MAX_COLS)
 			return ;
-		display[screen_tracker].cmd[display[screen_tracker].c_cols - 5] = c;
+		display[screen_tracker].cmd[display[screen_tracker].c_cols - 4] = c;
 	}
 	*video++ = c;
 	*video = color;
@@ -237,13 +269,12 @@ void	print_string(s8 *str, u8 color) {
 void	handle_command(void) {
 	cmd = false;
 	u8	*command = display[screen_tracker].cmd;
+	printk("1 -> %s\n", command);
 
 	if (!strncmp(command, "FG", 2))
 		handle_fg();
 	else if (!strncmp(command, "BG", 2))
 		handle_bg();
-	else if (!strncmp(command, "color", 5))
-		handle_color();
 	else if (!strncmp(command, "clear", 5))
 		handle_clear();
 	else if (!strncmp(command, "p_stack", 7))
@@ -254,6 +285,9 @@ void	handle_command(void) {
 		print_gdt();
 	else
 		print_string("command not found!\n", (BG_COLOR << 4) + RED);
+	for (u32 i = 0; i < 76; i++)
+	    display[screen_tracker].cmd[i] = '\0';
+	printk("2 -> %s\n", command);
 	return ;
 }
 
