@@ -5,28 +5,37 @@ typedef struct s_stack_frame {
     u32 eip;
 } t_stack_frame;
 
-void print_stack(u32 max_frames)
+
+ char is_printable(u8 c){
+	return (c >= 32 && c <= 126) ;
+}
+
+void print_stack_dump()
 {
-    t_stack_frame *frame;
-    u32 i;
+	u32 esp, ebp;
 
-    asm volatile("movl %%ebp, %0" : "=r"(frame));
+	asm volatile("movl %%esp, %0" : "=r"(esp));
+	asm volatile("movl %%ebp, %0" : "=r"(ebp));
+	u32 limit = ebp - esp;
 
-    print_string((s8 *)"Stack trace:\n", 0x0F);
+	int line = 0;
+	for (u32 i = 0; i < limit; i+=16 )
+	{
+		u32 addr = esp + i;
+		print_char('[', WHITE_ON_BLACK);
+		print_int(line++);
+		print_string(" : [", WHITE_ON_BLACK);
+		print_hex(addr);
+		print_char(' ', WHITE_ON_BLACK);
+		u8 * b = (u8 *)(addr);
+		for(int j= 0; j < 16; j++){
+			if (addr + j >= ebp) break;
+			if (is_printable(b[j]))
+				print_char(b[j], WHITE_ON_BLACK);
+			else
+				print_char('.', WHITE_ON_BLACK);
+		}
+		print_char('\n',WHITE_ON_BLACK);
+	}
 
-    i = 0;
-    while (frame != 0 && i < max_frames)
-    {
-        print_string((s8 *)"  #", 0x0F);
-        print_int(i);
-        print_string((s8 *)"  eip=", 0x0F);
-        print_hex(frame->eip);
-        print_char('\n', 0x0F);
-
-        if ((u32)frame->ebp <= (u32)frame || (u32)frame->ebp < 0x1000)
-            break;
-
-        frame = frame->ebp;
-        i++;
-    }
 }

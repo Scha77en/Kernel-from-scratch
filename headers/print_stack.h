@@ -4,6 +4,6 @@
 
 #include "screen.h"
 #include "types.h"
-void print_stack(u32 MaxFrames);
-
+//void print_stack(u32 MaxFrames);
+void print_stack_dump();
 #endif // !print_stack_h
