@@ -5,13 +5,9 @@
 #include "screen.h"
 #include "pic.h"
 
-#define MAX_KEYB_BUFFER_SIZE	255
-
-typedef struct {
-	u8	code;
-} key_event;
-
 void	keyboard_handler(void);
 _bool	getascii(u8 code);
+
+extern	_bool cmd;
 
 #endif

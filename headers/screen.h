@@ -11,7 +11,6 @@
 #define VGA_MAX_CHAR 2000
 
 
-// Attribute byte for our default colour scheme .
 #define WHITE_ON_BLACK	0x0f
 
 #define BLACK		0x0
@@ -31,14 +30,17 @@
 #define YELLOW		0xe
 #define WHITE		0xf
 
+#include "print_stack.h"
 typedef struct screens {
 	u32	c_cols;
 	u32	c_rows;
 	u8	buffer[VGA_MAX_CHAR * 2];
+	u8	cmd[76];
+	u32	S_BG_C;
+	s32	S_FG_C;
 } screen_t;
 
 
-// Global Color selector
 extern s32	BG_COLOR;
 extern s32	FG_COLOR;
 
@@ -51,7 +53,7 @@ void	print_int(s32 num);
 void	print_hex(u32 num);
 
 void	print_buffer_sc(void);
-
+void	printk(char *format, ...);
 // screen operations functions
 void	clear_screen(void);
 void	scroll_screen(void);
@@ -66,6 +68,9 @@ void	arrow_up(void);
 void	arrow_down(void);
 void	arrow_right(void);
 void	arrow_left(void);
+
+
+void	handle_command(void);
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4

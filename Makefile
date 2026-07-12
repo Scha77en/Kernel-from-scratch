@@ -6,10 +6,10 @@ ISO_ROOT = iso_root
 GRUB_DIR = $(ISO_ROOT)/boot/grub
 
 # === Compiler and Tools ===
-CC = gcc
+CC = i386-elf-gcc
 ASM = nasm
-LD = ld
-QEMU = qemu-system-i386 -vnc 0.0.0.0:0
+LD = i386-elf-ld
+QEMU = qemu-system-i386
 GRUB_MKRESCUE = grub-mkrescue
 
 # === Source Files ===
@@ -21,17 +21,15 @@ ALL_OBJECTS = $(ASM_OBJECTS) $(C_OBJECTS)
 
 # === Compilation Flags ===
 CFLAGS = \
-	-m32 \
 	-fno-builtin  \
 	-fno-stack-protector    \
 	-I$(HEADERS_DIR)       \
-	-nostdlib               \
 	-nodefaultlibs	\
-
+	-nostdlib 
 LDFLAGS = -m elf_i386 -T linker.ld
 
 # === Targets ===
-.PHONY: all clean build iso run debug
+.PHONY: all clean build iso run fclean
 
 all: iso
 
@@ -67,12 +65,10 @@ run: iso
 	$(QEMU) -cdrom kfs.iso -m 256M
 
 clean:
-	rm -rf $(OBJ_DIR) kernel.elf kfs.iso $(ISO_ROOT)
+	rm -rf $(OBJ_DIR) kernel.elf $(ISO_ROOT)
 	@echo "✓ Cleaned build files"
 
-debug:
-	@echo "C_SOURCES: $(C_SOURCES)"
-	@echo "C_OBJECTS: $(C_OBJECTS)"
-	@echo "ASM_SOURCES: $(ASM_SOURCES)"
-	@echo "ASM_OBJECTS: $(ASM_OBJECTS)"
-	@echo "ALL_OBJECTS: $(ALL_OBJECTS)"
+fclean: clean
+	rm -rf kfs.iso
+	@echo "✓ Removed iso"
+
