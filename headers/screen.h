@@ -35,6 +35,8 @@ typedef struct screens {
 	u32	c_rows;
 	u8	buffer[VGA_MAX_CHAR * 2];
 	u8	cmd[76];
+	u32	S_BG_C;
+	s32	S_FG_C;
 } screen_t;
 
 

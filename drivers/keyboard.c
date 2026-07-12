@@ -65,7 +65,6 @@ static void	cntl_handler(u8 scancode) {
 }
 
 void	keyboard_handler(void) {
-	FG_COLOR = CYAN;
 	u8 scancode = inb(0x60);
 
 	if (scancode == 0x2A || scancode == 0x36)
