@@ -23,6 +23,10 @@ static inline void io_wait(void)
     outb(0x80, 0);
 }
 
+static inline void outw(u16 port, u16 data) {
+    __asm__ volatile("outw %w0, %w1" : : "a" (data), "Nd" (port));
+}
+
 
 #endif
 

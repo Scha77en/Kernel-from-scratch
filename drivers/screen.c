@@ -3,10 +3,16 @@
 s32 BG_COLOR = BLACK;
 s32 FG_COLOR = GRAY;
 
+struct gdtr_pointer {
+    u16 limit;
+    u32 base;
+} __attribute__((packed));
+
 static u32		c_rows = 0;
 static u32		c_cols = 0;
 static screen_t		display[3];
 s32			screen_tracker = 0;
+u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
 
 
 // --- commands handlers ---
@@ -52,7 +58,6 @@ static void	handle_help(void) {
 	print_string("Available commands:\n", (BG_COLOR << 4) + LIGHT_GREEN);
 	print_string("help       --> Display this help menu\n", (BG_COLOR << 4) + YELLOW);
 	print_string("FG <color> --> Change the foreground color\n", (BG_COLOR << 4) + BROWN);
-	print_string("BG <color> --> Change the background color\n", (BG_COLOR << 4) + LIGHT_RED);
 	print_string("clear      --> Clear the screen buffer\n", (BG_COLOR << 4) + RED);
 	print_string("p_stack    --> Print the stack bytes\n", (BG_COLOR << 4) + LIGHT_BLUE);
 	print_string("gdt        --> Print the address and content of gdt\n", (BG_COLOR << 4) + CYAN);
@@ -102,16 +107,16 @@ static void	handle_fg(void) {
 	fg_wrong_cmd();
 }
 
-static void	handle_bg(void) {
-	print_string("handling BG\n", (BG_COLOR << 4) + GREEN);
-}
-
 static void	handle_clear(void) {
-	print_string("handling clear\n", (BG_COLOR << 4) + GREEN);
+	clear_screen();
+	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
+		display[screen_tracker].buffer[i++] = 0x20;
+		display[screen_tracker].buffer[i] = GRAY;
+	}
 }
 
 static void	handle_reboot(void) {
-	print_string("handling reboot\n", (BG_COLOR << 4) + GREEN);
+	outb(0xCF9, 0xE);
 }
 
 static void	print_stack(void) {
@@ -119,18 +124,51 @@ static void	print_stack(void) {
 }
 
 static void	print_gdt(void) {
-	print_string("handling gdt\n", (BG_COLOR << 4) + GREEN);
+    struct gdtr_pointer gdtr;
+
+    asm volatile("sgdt %0" : "=m"(gdtr));
+
+    printk("=== CPU GDT LIVE HARDWARE STATE ===\n");
+    printk("GDT Base Address : %x\n", gdtr.base);
+    printk("GDT Limit (Size) : %d bytes\n", gdtr.limit + 1);
+
+    int total_entries = (gdtr.limit + 1) / 8;
+    printk("Total Entries    : %d\n\n", total_entries);
+
+    u32* gdt_memory = (u32*)gdtr.base;
+
+    printk("    Selector     |  Raw Hex Value (High / Low) | Guess Type\n");
+    printk("-----------------|-----------------------------|------------\n");
+
+    for (int i = 0; i < total_entries; i++) {
+        u32 low_32  = gdt_memory[i * 2];
+        u32 high_32 = gdt_memory[(i * 2) + 1];
+
+        u16 selector = i * 8;
+
+        const char* type = "Unknown";
+        if (i == 0) type = "Null Descriptor";
+        else if (i == 1) type = "Kernel Code (Ring 0)";
+        else if (i == 2) type = "Kernel Data (Ring 0)";
+        else if (i == 3) type = "Kernel Stack (Ring 0)";
+        else if (i == 4) type = "User Code (Ring 3)";
+        else if (i == 5) type = "User Data (Ring 3)";
+        else if (i == 6) type = "User Stack (Ring 3)";
+
+        printk("    %x   |    %x %x    | %s\n", selector, high_32, low_32, type);
+    }
 }
 
 static void	power_off(void) {
-	print_string("handling power_off\n", (BG_COLOR << 4) + GREEN);
+	__asm__ volatile ("cli");
+	outw(0x604, 0x2000);
 }
 
 void	clear_buffers(void) {
 	for (u32 j = 0; j < 3; j++) {
 		for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
 			display[j].buffer[i++] = 0x20;
-			display[j].buffer[i] = GREEN;
+			display[j].buffer[i] = GRAY;
 		}
 	}
 	print_string("kfs>", (BG_COLOR << 4) + YELLOW);
@@ -156,10 +194,10 @@ void	clear_buffers(void) {
 			display[2].buffer[i++] = '>';
 		display[2].buffer[i] = (BG_COLOR << 4) + LIGHT_PURPLE;
 	}
-	display[1].c_cols = 4;
-	display[1].S_FG_C = GRAY;
-	display[2].c_cols = 4;
-	display[2].S_FG_C = GRAY;
+	for (u8 i = 0; i < 3; i++) {
+		display[i].c_cols = 4;
+		display[i].S_FG_C = GRAY;
+	}
 }
 
 // ------------------------------
@@ -284,8 +322,6 @@ void	print_char(u8 c, u8 color) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS + (c_rows * MAX_COLS + c_cols) * 2;
 	u32	i = (c_rows * MAX_COLS + c_cols) * 2;
 
-	u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
-
 	if (c == '\n') {
 		c_rows++;
 		c_cols = 0;
@@ -340,19 +376,16 @@ void	print_string(s8 *str, u8 color) {
 void	handle_command(void) {
 	cmd = false;
 	u8	*command = display[screen_tracker].cmd;
-	//printk("1 -> %s\n", command);
 
 	if (!strncmp(command, "FG", 0, 2))
 		handle_fg();
-	else if (!strncmp(command, "BG", 0, 2))
-		handle_bg();
 	else if (!strncmp(command, "clear", 0, 5))
 		handle_clear();
 	else if (!strncmp(command, "p_stack", 0, 7))
 		print_stack();
 	else if (!strncmp(command, "reboot", 0, 6))
 		handle_reboot();
-	else if (!strncmp(command, "gdt", 0, 2))
+	else if (!strncmp(command, "gdt", 0, 3))
 		print_gdt();
 	else if (!strncmp(command, "help", 0, 4))
 		handle_help();
@@ -362,7 +395,6 @@ void	handle_command(void) {
 		print_string("command not found!\n", (BG_COLOR << 4) + RED);
 	for (u32 i = 0; i < 76; i++)
 	    display[screen_tracker].cmd[i] = '\0';
-	//printk("2 -> %s\n", command);
 	return ;
 }
 
@@ -426,10 +458,6 @@ void	backspace(u8 color) {
 		display[screen_tracker].cmd[c_cols] = '\0';
 		c_cols--;
 	}
-	//else if (c_cols == 0 && c_rows > 0) {
-	//	c_rows--;
-	//	find_end_c_cols(0);
-	//}
 	move_cursor((c_rows * MAX_COLS + c_cols));
 	display[screen_tracker].c_cols = c_cols;
 	display[screen_tracker].c_rows = c_rows;
