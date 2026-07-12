@@ -2,12 +2,15 @@
 #include "../headers/screen.h"
 #include "../headers/low_level.h"
 #include "../headers/idt.h"
+#include "../headers/print_stack.h"
 
 int main(void) {
 	clear_screen();
 	clear_buffers();
 	PIC_remap(0x20, 0x28);
 	idt_init();
+	base_ebp = 0;
+	asm volatile ("movl %%ebp, %0" : "=r"(base_ebp));
 
 	return 0;
 }

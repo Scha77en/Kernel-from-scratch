@@ -30,6 +30,7 @@
 #define YELLOW		0xe
 #define WHITE		0xf
 
+#include "print_stack.h"
 typedef struct screens {
 	u32	c_cols;
 	u32	c_rows;

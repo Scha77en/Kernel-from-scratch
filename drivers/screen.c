@@ -14,20 +14,23 @@ static screen_t		display[3];
 s32			screen_tracker = 0;
 u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
 
+static u32	strlen(const u8 *str) {
+	u32	i = 0;
 
-// --- commands handlers ---
-
-static u8	strncmp(char *s1, char *s2, u8 bgn, u8 end)
-{
-	u8	i;
-
-	i = bgn;
-	while (i < end && (s1[i] || s2[i])) {
-		if (((char *)s1)[i] != ((char *)s2)[i])
-			return 1;
+	while (str[i])
 		i++;
-	}
-	return (0);
+	return i;
+}
+
+static int	strcmp(const char * s1, const char *s2, u32 n) {
+	const char * ps1 = s1;
+	const char * ps2 = s2;
+
+	while ((*ps1 ||* ps2 )&& *ps1 == *ps2) {
+		ps2++;
+		ps1++;
+    	}
+	return *ps1 - *ps2;
 }
 
 static	void	memcpy(u8 *dst, u8 *src, u32 n) {
@@ -91,13 +94,13 @@ static void	handle_fg(void) {
 		fg_wrong_cmd();
 		return ;
 	}
-	s8	*colors[16] = {"BLACK\0", "WHITE\0", "YELLOW\0", "BLUE\0", "GREEN\0", "CYAN\0", "RED\0", \
-				"PURPLE\0", "BROWN\0", "GRAY\0", "DARK_GRAY\0", "LIGHT_BLUE\0", "LIGHT_GREEN\0", \
-				"LIGHT_CYAN\0", "LIGHT_RED\0", "LIGHT_PURPLE\0"};
+	s8	*colors[16] = {"BLACK", "WHITE", "YELLOW", "BLUE", "GREEN", "CYAN", "RED", \
+				"PURPLE", "BROWN", "GRAY", "DARK_GRAY", "LIGHT_BLUE", "LIGHT_GREEN", \
+				"LIGHT_CYAN", "LIGHT_RED", "LIGHT_PURPLE"};
 	u32	fg_colors[16] = {BLACK, WHITE, YELLOW, BLUE, GREEN, CYAN, RED, PURPLE, BROWN, GRAY, \
 			DARK_GRAY, LIGHT_BLUE, LIGHT_GREEN, LIGHT_CYAN, LIGHT_RED, LIGHT_PURPLE};
 	for (u8 i = 0; i < 16; i++) {
-		if (!strncmp(&display[screen_tracker].cmd[3], colors[i], 3, 15)) {
+		if (!strcmp(&display[screen_tracker].cmd[3], colors[i], strlen(colors[i]))) {
 			FG_COLOR = fg_colors[i];
 			display[screen_tracker].S_FG_C = FG_COLOR;
 			print_string("FG color changed successfully!\n", (BG_COLOR << 4) + FG_COLOR);
@@ -120,7 +123,7 @@ static void	handle_reboot(void) {
 }
 
 static void	print_stack(void) {
-	print_string("handling print_stack\n", (BG_COLOR << 4) + GREEN);
+	print_stack_dump();
 }
 
 static void	print_gdt(void) {
@@ -145,7 +148,15 @@ static void	print_gdt(void) {
         u32 high_32 = gdt_memory[(i * 2) + 1];
 
         u16 selector = i * 8;
-
+int strcmp(const char * s1, const char *s2){
+    const char * ps1 = s1;
+    const char * ps2 = s2;
+    while ((*ps1 ||* ps2 )&& *ps1 == *ps2){
+        ps2++;
+        ps1++;
+    }
+    return *ps1 - *ps2;
+}
         const char* type = "Unknown";
         if (i == 0) type = "Null Descriptor";
         else if (i == 1) type = "Kernel Code (Ring 0)";
@@ -375,21 +386,29 @@ void	print_string(s8 *str, u8 color) {
 
 void	handle_command(void) {
 	cmd = false;
-	u8	*command = display[screen_tracker].cmd;
+	u8	*cmd_buf = display[screen_tracker].cmd;
+	u8	command[20];
+	u8	i = 0;
 
-	if (!strncmp(command, "FG", 0, 2))
+	while (cmd_buf[i] && cmd_buf[i] != ' ') {
+		command[i] = cmd_buf[i];
+		i++;
+	}
+	command[i] = '\0';
+
+	if (!strcmp(command, "FG", strlen("FG")))
 		handle_fg();
-	else if (!strncmp(command, "clear", 0, 5))
+	else if (!strcmp(command, "clear", strlen("clear")))
 		handle_clear();
-	else if (!strncmp(command, "p_stack", 0, 7))
+	else if (!strcmp(command, "p_stack", strlen("p_stack")))
 		print_stack();
-	else if (!strncmp(command, "reboot", 0, 6))
+	else if (!strcmp(command, "reboot", strlen("reboot")))
 		handle_reboot();
-	else if (!strncmp(command, "gdt", 0, 3))
+	else if (!strcmp(command, "gdt", strlen("gdt")))
 		print_gdt();
-	else if (!strncmp(command, "help", 0, 4))
+	else if (!strcmp(command, "help", strlen("help")))
 		handle_help();
-	else if (!strncmp(command, "poweroff", 0, 8))
+	else if (!strcmp(command, "poweroff", strlen("poweroff")))
 		power_off();
 	else
 		print_string("command not found!\n", (BG_COLOR << 4) + RED);
@@ -455,7 +474,7 @@ static _bool	find_end_c_cols(u8 arrow) {
 
 void	backspace(u8 color) {
 	if (c_cols > 4) {
-		display[screen_tracker].cmd[c_cols] = '\0';
+		display[screen_tracker].cmd[c_cols - 5] = '\0';
 		c_cols--;
 	}
 	move_cursor((c_rows * MAX_COLS + c_cols));
