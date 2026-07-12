@@ -6,4 +6,5 @@
 #include "types.h"
 //void print_stack(u32 MaxFrames);
 void print_stack_dump();
+extern u32 base_ebp;
 #endif // !print_stack_h

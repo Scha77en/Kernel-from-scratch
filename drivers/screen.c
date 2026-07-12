@@ -115,7 +115,7 @@ static void	handle_reboot(void) {
 }
 
 static void	print_stack(void) {
-	print_stack();
+	print_stack_dump();
 }
 
 static void	print_gdt(void) {

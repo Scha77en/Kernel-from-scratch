@@ -9,6 +9,8 @@ int main(void) {
 	clear_buffers();
 	PIC_remap(0x20, 0x28);
 	idt_init();
+	base_ebp = 0;
+	asm volatile ("movl %%ebp, %0" : "=r"(base_ebp));
 
 	return 0;
 }
