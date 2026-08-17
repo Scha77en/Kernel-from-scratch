@@ -5,8 +5,6 @@
 #include "pic.h"
 #include "keyboard.h"
 
-#define IDT_CPU_EXCEPTIONS 36
-
 typedef struct {
 	u16    isr_low;
 	u16    kernel_cs;

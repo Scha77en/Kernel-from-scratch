@@ -1,21 +1,37 @@
 global isr_stub_table
+global isr_stub_128
+
 extern interrupt_handler
+extern signal_handler
 
 %macro isr_err_stub 1
 isr_stub_%+%1:
+	pushad
 	push %1
 	call interrupt_handler
-	add esp, 8
-	iret 
+	add esp, 4
+	popad
+	add esp, 4
+	iretd
 %endmacro
 
 %macro isr_no_err_stub 1
 isr_stub_%+%1:
+	pushad
 	push %1
 	call interrupt_handler
 	add esp, 4
-	iret
+	popad
+	iretd
 %endmacro
+
+isr_stub_128:
+	pushad
+	push esp
+	call signal_handler
+	add esp, 4
+	popad
+	iretd
 
 isr_no_err_stub 0
 isr_no_err_stub 1
@@ -57,10 +73,10 @@ isr_no_err_stub 31
 %endrep
 
 isr_stub_table:
-%assign i 0
-%rep 48
-	dd isr_stub_%+i
-%assign i i+1
-%endrep
+	%assign i 0
+	%rep 48
+		dd isr_stub_%+i
+	%assign i i+1
+	%endrep
 
 
