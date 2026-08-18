@@ -4,12 +4,12 @@
 #include "types.h"
 #include "low_level.h"
 #include "keyboard.h" 
+#include "print_stack.h"
 
 #define VIDEO_ADDRESS 0xb8000
-#define MAX_ROWS 25
+#define MAX_ROWS 24
 #define MAX_COLS 80
 #define VGA_MAX_CHAR 2000
-
 
 #define WHITE_ON_BLACK	0x0f
 
@@ -30,7 +30,6 @@
 #define YELLOW		0xe
 #define WHITE		0xf
 
-#include "print_stack.h"
 typedef struct screens {
 	u32	c_cols;
 	u32	c_rows;
@@ -54,6 +53,7 @@ void	print_hex(u32 num);
 
 void	print_buffer_sc(void);
 void	printk(char *format, ...);
+
 // screen operations functions
 void	clear_screen(void);
 void	scroll_screen(void);
@@ -62,6 +62,7 @@ void	backspace(u8 color);
 void	switch_screen(void);
 
 void	clear_buffers(void);
+void	screen_tracker_d(void);
 
 // arrows functions
 void	arrow_up(void);

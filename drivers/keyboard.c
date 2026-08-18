@@ -42,6 +42,10 @@ static void	handle_arrow(u8 scancode) {
 		case 0x4B:
 			arrow_left();
 			break;
+		case 0x2E:
+			schedule_signal(SIGINT);
+		case 0x20:
+			schedule_signal(SIGTERM);
 		default:
 			return ;
 	}

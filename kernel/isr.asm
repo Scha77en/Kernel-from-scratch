@@ -2,7 +2,7 @@ global isr_stub_table
 global isr_stub_128
 
 extern interrupt_handler
-extern signal_handler
+extern schedule_signal
 
 %macro isr_err_stub 1
 isr_stub_%+%1:
@@ -28,7 +28,7 @@ isr_stub_%+%1:
 isr_stub_128:
 	pushad
 	push esp
-	call signal_handler
+	call schedule_signal
 	add esp, 4
 	popad
 	iretd

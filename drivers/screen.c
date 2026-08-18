@@ -11,7 +11,10 @@ struct gdtr_pointer {
 static u32		c_rows = 0;
 static u32		c_cols = 0;
 static screen_t		display[3];
+static bool		disable_scroll = false;
+
 s32			screen_tracker = 0;
+
 u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
 
 static u32	strlen(const u8 *str) {
@@ -182,6 +185,7 @@ void	clear_buffers(void) {
 			display[j].buffer[i] = GRAY;
 		}
 	}
+	screen_tracker_d();
 	print_string("kfs>", (BG_COLOR << 4) + YELLOW);
 	for (u8 i = 0; i < 8; i++) {
 		if (i == 0)
@@ -367,7 +371,7 @@ void	print_char(u8 c, u8 color) {
 	if (c_cols >= MAX_COLS) {
 		c_cols = 0;
 		c_rows++;
-		if (c_rows >= MAX_ROWS) {
+		if (c_rows >= MAX_ROWS && !disable_scroll) {
 			c_rows--;
 			scroll_screen();
 		}
@@ -396,6 +400,7 @@ void	handle_command(void) {
 	}
 	command[i] = '\0';
 
+	printk("cmd == [%s]\n", command);
 	if (!strcmp(command, "FG", strlen("FG")))
 		handle_fg();
 	else if (!strcmp(command, "clear", strlen("clear")))
@@ -419,9 +424,20 @@ void	handle_command(void) {
 
 void	scroll_screen(void) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
-	for (u32 i = 1; i < MAX_ROWS; i++){
-		mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
+	volatile u8 *empty_this = (volatile u8 *)VIDEO_ADDRESS + (MAX_ROWS * MAX_COLS) * 2;
+	for (u32 i = 1; i < MAX_ROWS - 1 ; i++){
+			mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
 	}
+
+	u8	empty_buf[MAX_COLS * 2] = {0};
+
+	for (u32 i = 0; i < MAX_COLS * 2; i += 2) {
+		empty_buf[i] = ' ';
+		empty_buf[i + 1] = WHITE_ON_BLACK;
+	}
+
+	mem_move(((u16 *)VIDEO_ADDRESS + ((MAX_ROWS - 2) * MAX_COLS)), (u16 *)empty_buf, MAX_COLS);
+
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		display[screen_tracker].buffer[i] = *video++;
 		display[screen_tracker].buffer[i + 1] = *video++;
@@ -433,7 +449,7 @@ void	mem_move(u16 *dst, u16 *src, u8 len) {
 	while (i < len * 2) {
 		dst[i] = src[i];
 		i++;
-	}	
+	}
 }
 
 static _bool	find_end_c_cols(u8 arrow) {
@@ -581,4 +597,46 @@ void	print_buffer_sc(void) {
 	}
 }
 
+void	screen_tracker_d(void) {
+	u32	cols_tmp = c_cols;
+	u32	rows_tmp = c_rows;
+	c_cols = 0;
+	c_rows = 24;
 
+	disable_scroll = true;
+	for (u32 i = 0; i < MAX_COLS; i++) {
+		switch (c_cols) {
+			case 37:
+				if (screen_tracker == 0) {
+					BG_COLOR = screen_color[screen_tracker];
+					FG_COLOR = BLACK;
+				}
+				print_char('1', (BG_COLOR << 4) + FG_COLOR);
+				break;
+			case 39:
+				if (screen_tracker == 1) {
+					BG_COLOR = screen_color[screen_tracker];
+					FG_COLOR = BLACK;
+				}
+				print_char('2', (BG_COLOR << 4) + FG_COLOR);
+				break;
+			case 41:
+				if (screen_tracker == 2) {
+					BG_COLOR = screen_color[screen_tracker];
+					FG_COLOR = BLACK;
+				}
+				print_char('3', (BG_COLOR << 4) + FG_COLOR);
+				break;
+			default:
+				BG_COLOR = BLACK;
+				FG_COLOR = screen_color[screen_tracker];
+				print_char('-', (BG_COLOR << 4) + FG_COLOR);
+				break;
+		}
+	}
+
+	disable_scroll = false;
+	c_cols = cols_tmp;
+	c_rows = rows_tmp;
+	move_cursor((c_rows * MAX_COLS + c_cols));
+}

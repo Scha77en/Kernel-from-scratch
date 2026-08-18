@@ -1,10 +1,12 @@
 #include "../headers/signal.h"
 
-void	signal_handler(void) {
-	return ;
-}
+//void	signal_handler(void) {
+//	return ;
+//}
 
-static sighandler_t signal_table[MAX_SIGNALS];
+static sighandler_t	signal_handlers[MAX_SIG] = {0};
+
+static sighandler_t signal_table[MAX_SIG];
 
 #define QUEUE_SIZE 64
 
@@ -17,7 +19,7 @@ typedef struct {
 static signal_queue_t queue;
 
 void signal_init(void) {
-    for (int i = 0; i < MAX_SIGNALS; i++) {
+    for (int i = 0; i < MAX_SIG; i++) {
         signal_table[i] = 0;
     }
     queue.head = 0;
@@ -25,7 +27,7 @@ void signal_init(void) {
 }
 
 int signal_register(int signum, sighandler_t handler) {
-    if (signum <= 0 || signum >= MAX_SIGNALS) {
+    if (signum <= 0 || signum >= MAX_SIG) {
         return -1;
     }
     signal_table[signum] = handler;
@@ -33,7 +35,7 @@ int signal_register(int signum, sighandler_t handler) {
 }
 
 void signal_emit(int signum) {
-    if (signum > 0 && signum < MAX_SIGNALS) {
+    if (signum > 0 && signum < MAX_SIG) {
         sighandler_t handler = signal_table[signum];
         if (handler) {
             handler(signum);
@@ -45,7 +47,7 @@ void signal_emit(int signum) {
 
 
 bool schedule_signal(int signum) {
-    if (signum <= 0 || signum >= MAX_SIGNALS) {
+    if (signum <= 0 || signum >= MAX_SIG) {
         return false;
     }
 

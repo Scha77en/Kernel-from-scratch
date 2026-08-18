@@ -18,7 +18,7 @@
 
 typedef void	(*sighandler_t)(int signum);
 
-void	signal_handler(void);
+//void	signal_handler(void);
 void	signal(int sig, void (*handler)(void));
 
 // Public Kernel API
@@ -28,10 +28,9 @@ void	signal_emit(int signum);
 
 
 // Scheduling API
-bool	scheduling_signal(int signum);
+bool	schedule_signal(int signum);
 void	dispatch_scheduled_signals(void);
 
-typedef void	(*sighandler_t)(void);
-sighandler_t	signal_handlers[32] = {0};
+//sighandler_t	signal_handlers[32] = {0};
 
 #endif
