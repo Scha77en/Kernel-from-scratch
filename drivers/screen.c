@@ -12,6 +12,7 @@ static u32		c_rows = 0;
 static u32		c_cols = 0;
 static screen_t		display[3];
 static bool		disable_scroll = false;
+static u8		display_count = 0;
 
 s32			screen_tracker = 0;
 
@@ -273,6 +274,10 @@ void	print_int(s32 num) {
 
 void	switch_screen(void) {
 	clear_screen();
+	if (display_count < 3) {
+		screen_tracker_d();
+		display_count++;
+	}
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		*video++ = display[screen_tracker].buffer[i];
@@ -377,8 +382,10 @@ void	print_char(u8 c, u8 color) {
 		}
 	}
 	move_cursor((c_rows * MAX_COLS + c_cols));
-	display[screen_tracker].c_cols = c_cols;
-	display[screen_tracker].c_rows = c_rows;
+	if (!disable_scroll) {
+		display[screen_tracker].c_cols = c_cols;
+		display[screen_tracker].c_rows = c_rows;
+	}
 }
 
 void	print_string(s8 *str, u8 color) {
@@ -424,19 +431,25 @@ void	handle_command(void) {
 
 void	scroll_screen(void) {
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
-	volatile u8 *empty_this = (volatile u8 *)VIDEO_ADDRESS + (MAX_ROWS * MAX_COLS) * 2;
-	for (u32 i = 1; i < MAX_ROWS - 1 ; i++){
-			mem_move(((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)), ((u16 *)VIDEO_ADDRESS + i * MAX_COLS), MAX_COLS);
+	volatile u8 *empty_this = (volatile u8 *)VIDEO_ADDRESS + ((MAX_ROWS - 1) * MAX_COLS) * 2;
+	for (u32 i = 1; i < MAX_ROWS - 1; i++){
+		mem_move(
+			((u16 *)VIDEO_ADDRESS + ((i - 1) * MAX_COLS)),
+			((u16 *)VIDEO_ADDRESS + i * MAX_COLS),
+			MAX_COLS);
 	}
 
-	u8	empty_buf[MAX_COLS * 2] = {0};
+	u8	empty_buf[MAX_COLS * 2];
 
 	for (u32 i = 0; i < MAX_COLS * 2; i += 2) {
 		empty_buf[i] = ' ';
 		empty_buf[i + 1] = WHITE_ON_BLACK;
 	}
 
-	mem_move(((u16 *)VIDEO_ADDRESS + ((MAX_ROWS - 2) * MAX_COLS)), (u16 *)empty_buf, MAX_COLS);
+	mem_move(
+		(u16 *)empty_this,
+		(u16 *)empty_buf,
+		MAX_COLS / 2);
 
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		display[screen_tracker].buffer[i] = *video++;
@@ -628,6 +641,12 @@ void	screen_tracker_d(void) {
 				print_char('3', (BG_COLOR << 4) + FG_COLOR);
 				break;
 			default:
+				if (c_cols > 73) {
+					BG_COLOR = screen_color[screen_tracker];
+					FG_COLOR = BLACK;
+					print_string("qwerty", (BG_COLOR << 4) + FG_COLOR);
+					break ;
+				}
 				BG_COLOR = BLACK;
 				FG_COLOR = screen_color[screen_tracker];
 				print_char('-', (BG_COLOR << 4) + FG_COLOR);
@@ -635,6 +654,8 @@ void	screen_tracker_d(void) {
 		}
 	}
 
+	BG_COLOR = BLACK;
+	FG_COLOR = GRAY;
 	disable_scroll = false;
 	c_cols = cols_tmp;
 	c_rows = rows_tmp;
