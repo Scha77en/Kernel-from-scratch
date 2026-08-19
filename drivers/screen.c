@@ -186,7 +186,7 @@ void	clear_buffers(void) {
 			display[j].buffer[i] = GRAY;
 		}
 	}
-	screen_tracker_d();
+	//screen_tracker_d();
 	print_string("kfs>", (BG_COLOR << 4) + YELLOW);
 	for (u8 i = 0; i < 8; i++) {
 		if (i == 0)
@@ -282,11 +282,20 @@ void	switch_screen(void) {
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		*video++ = display[screen_tracker].buffer[i];
 		*video++ = display[screen_tracker].buffer[i + 1];
+		//if (i == VGA_MAX_CHAR * 2 - 4)
+			//printk("[%c]", display[screen_tracker].buffer[i]);
 	}
 	c_cols = display[screen_tracker].c_cols;
 	c_rows = display[screen_tracker].c_rows;
 	move_cursor((c_rows * MAX_COLS + c_cols));
 	FG_COLOR = display[screen_tracker].S_FG_C;
+	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
+		//if (i % 2 == 0 && i > VGA_MAX_CHAR * 2 - 14)
+			//if (!getascii(display[screen_tracker].buffer[i]))
+				//printk("null azbi hda");
+			//else
+				//printk("[%c]", display[screen_tracker].buffer[i]);
+	}
 }
 
 void	printk(char *format, ...) {
@@ -407,7 +416,7 @@ void	handle_command(void) {
 	}
 	command[i] = '\0';
 
-	printk("cmd == [%s]\n", command);
+	//printk("cmd == [%s]\n", command);
 	if (!strcmp(command, "FG", strlen("FG")))
 		handle_fg();
 	else if (!strcmp(command, "clear", strlen("clear")))
@@ -617,7 +626,7 @@ void	screen_tracker_d(void) {
 	c_rows = 24;
 
 	disable_scroll = true;
-	for (u32 i = 0; i < MAX_COLS; i++) {
+	for (u32 i = 0; i < MAX_COLS - strlen("qwerty") ; i++) {
 		switch (c_cols) {
 			case 37:
 				if (screen_tracker == 0) {
@@ -641,18 +650,20 @@ void	screen_tracker_d(void) {
 				print_char('3', (BG_COLOR << 4) + FG_COLOR);
 				break;
 			default:
-				if (c_cols > 73) {
-					BG_COLOR = screen_color[screen_tracker];
-					FG_COLOR = BLACK;
-					print_string("qwerty", (BG_COLOR << 4) + FG_COLOR);
-					break ;
-				}
 				BG_COLOR = BLACK;
 				FG_COLOR = screen_color[screen_tracker];
 				print_char('-', (BG_COLOR << 4) + FG_COLOR);
 				break;
 		}
 	}
+
+	BG_COLOR = screen_color[screen_tracker];
+	FG_COLOR = BLACK;
+	print_string("qwerty", (BG_COLOR << 4) + FG_COLOR);
+	int i = c_cols;
+	c_cols = 4;
+	c_rows = 0;
+	printk("%d", i);
 
 	BG_COLOR = BLACK;
 	FG_COLOR = GRAY;
