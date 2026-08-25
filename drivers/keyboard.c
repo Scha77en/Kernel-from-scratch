@@ -42,10 +42,6 @@ static void	handle_arrow(u8 scancode) {
 		case 0x4B:
 			arrow_left();
 			break;
-		case 0x2E:
-			schedule_signal(SIGINT);
-		case 0x20:
-			schedule_signal(SIGTERM);
 		default:
 			return ;
 	}
@@ -62,6 +58,14 @@ static void	cntl_handler(u8 scancode) {
 			if (--screen_tracker < 0)
 				screen_tracker = 2;
 			switch_screen();
+			break;
+		case 0x2E:
+			sig = true;
+			schedule_signal(SIGINT);
+			break;
+		case 0x20:
+			sig = true;
+			schedule_signal(SIGTERM);
 			break;
 		default:
 			return ;

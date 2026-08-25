@@ -1,5 +1,4 @@
 global isr_stub_table
-global isr_stub_128
 
 extern interrupt_handler
 extern schedule_signal
@@ -24,14 +23,6 @@ isr_stub_%+%1:
 	popad
 	iretd
 %endmacro
-
-isr_stub_128:
-	pushad
-	push esp
-	call schedule_signal
-	add esp, 4
-	popad
-	iretd
 
 isr_no_err_stub 0
 isr_no_err_stub 1

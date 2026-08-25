@@ -55,7 +55,7 @@ void	print_buffer_sc(void);
 void	printk(char *format, ...);
 
 // screen operations functions
-void	clear_screen(void);
+void	clear_screen(int max);
 void	scroll_screen(void);
 void	mem_move(u16 *dst, u16 *src, u8 len);
 void	backspace(u8 color);

@@ -115,8 +115,8 @@ static void	handle_fg(void) {
 }
 
 static void	handle_clear(void) {
-	clear_screen();
-	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
+	clear_screen(1);
+	for (u32 i = 0; i < VGA_MAX_CHAR * 2 - 160; i++) {
 		display[screen_tracker].buffer[i++] = 0x20;
 		display[screen_tracker].buffer[i] = GRAY;
 	}
@@ -186,7 +186,7 @@ void	clear_buffers(void) {
 			display[j].buffer[i] = GRAY;
 		}
 	}
-	//screen_tracker_d();
+	screen_tracker_d();
 	print_string("kfs>", (BG_COLOR << 4) + YELLOW);
 	for (u8 i = 0; i < 8; i++) {
 		if (i == 0)
@@ -218,7 +218,7 @@ void	clear_buffers(void) {
 
 // ------------------------------
 
-void	clear_screen(void) {
+void	clear_screen(int mode) {
 	u16	*video = (u16 *)VIDEO_ADDRESS;
 	u16	blank = 0x0F20;
 
@@ -226,7 +226,9 @@ void	clear_screen(void) {
 	c_cols = 0;
 	move_cursor(0);
 
-	for (u32 i = 0; i < VGA_MAX_CHAR; i++) {
+	u32	max = mode ? VGA_MAX_CHAR - 160 : VGA_MAX_CHAR;
+
+	for (u32 i = 0; i < max; i++) {
 		*video++ = blank;
 	}
 }
@@ -273,7 +275,7 @@ void	print_int(s32 num) {
 }
 
 void	switch_screen(void) {
-	clear_screen();
+	clear_screen(1);
 	if (display_count < 3) {
 		screen_tracker_d();
 		display_count++;
@@ -431,7 +433,7 @@ void	handle_command(void) {
 		handle_help();
 	else if (!strcmp(command, "poweroff", strlen("poweroff")))
 		power_off();
-	else
+	else if (!sig)
 		print_string("command not found!\n", (BG_COLOR << 4) + RED);
 	for (u32 i = 0; i < 76; i++)
 	    display[screen_tracker].cmd[i] = '\0';
@@ -626,7 +628,7 @@ void	screen_tracker_d(void) {
 	c_rows = 24;
 
 	disable_scroll = true;
-	for (u32 i = 0; i < MAX_COLS - strlen("qwerty") ; i++) {
+	for (u32 i = 0; i < MAX_COLS - strlen("qwerty ") ; i++) {
 		switch (c_cols) {
 			case 37:
 				if (screen_tracker == 0) {
@@ -660,10 +662,6 @@ void	screen_tracker_d(void) {
 	BG_COLOR = screen_color[screen_tracker];
 	FG_COLOR = BLACK;
 	print_string("qwerty", (BG_COLOR << 4) + FG_COLOR);
-	int i = c_cols;
-	c_cols = 4;
-	c_rows = 0;
-	printk("%d", i);
 
 	BG_COLOR = BLACK;
 	FG_COLOR = GRAY;

@@ -6,11 +6,11 @@
 #include "../headers/signal.h"
 
 static	void on_sigint(int signum) {
-	printk("\n[SIGNAL RECEIVED] SIGINT (%d): Interrupted by user (CTRL+C)!\n", signum);
+	printk("[SIGNAL RECEIVED] SIGINT (%d): Interrupted by user (CTRL+C)!", signum);
 }
 
 static	void on_sigterm(int signum) {
-	printk("\n[SIGNAL RECEIVED] SIGTERM (%d): Terminating process (CTRL+D)...\n", signum);
+	printk("[SIGNAL RECEIVED] SIGTERM (%d): Terminating process (CTRL+D)!", signum);
 }
 
 int main(void) {
@@ -18,15 +18,17 @@ int main(void) {
 	signal_register(SIGINT, on_sigint);
 	signal_register(SIGTERM, on_sigterm);
 
-	clear_screen();
+	clear_screen(0);
 	clear_buffers();
-
-	//screen_tracker_d();
 
 	PIC_remap(0x20, 0x28);
 	idt_init();
 	base_ebp = 0;
 	asm volatile ("movl %%ebp, %0" : "=r"(base_ebp));
+
+	while(1) {
+		dispatch_scheduled_signals();
+	}
 
 	return 0;
 }
