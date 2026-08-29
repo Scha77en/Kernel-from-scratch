@@ -3,26 +3,62 @@
 static u8	shift = 0;
 static u8	caps = 0;
 static u8	cntl = 0;
-_bool	cmd = false;
+_bool		cmd = false;
 
-static const u8 scancode_to_ascii_low[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
-				'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j',
-				'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+kbd_layout_t	current_layout = QWERTY;
+u8	sc_color_kbd[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
 
-static const u8 scancode_to_ascii_shift[87] = {0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
-				'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
-				'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ',
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+static const u8	azerty_to_ascii_low[87] = {
+	0, 0, '&', 0xE9, '"', '\'', '(', '-', 0xE8, '_', 0xE7, 0xE0, ')', '=', '\b', '\t',
+	'a', 'z', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '^', '$', '\n', 0, 
+	'q', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 0xF9, '<', 0, '\\', 
+	'w', 'x', 'c', 'v', 'b', 'n', ',', ';', ':', '!', 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0
+};
 
-static const u8 scancode_to_ascii_caps[87] = {0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
-				'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
-				'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ',
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+static const u8	azerty_to_ascii_shift[87] = {
+	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 0xB0, '+', '\b', '\t',
+	'A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 0xA8, '*', '\n', 0, 
+	'Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', '%', '>', 0, '|', 
+	'W', 'X', 'C', 'V', 'B', 'N', '?', '.', '/', 0xA7, 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0
+};
+
+static const u8	azerty_to_ascii_caps[87] = {
+	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+	'A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '^', '$', '\n', 0, 
+	'Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', '%', '>', 0, '\\', 
+	'W', 'X', 'C', 'V', 'B', 'N', ',', ';', ':', '!', 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0
+};
+
+static void	kbd_set_layout(kbd_layout_t layout) {
+	current_layout = layout;
+	char	*kbd_layout = (layout == AZERTY) ? "azerty" : "qwerty";
+	print_layout(kbd_layout, 1);
+}
+
+static const u8 qwerty_to_ascii_low[87] = {
+	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+	'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j',
+	'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+
+static const u8 qwerty_to_ascii_shift[87] = {
+	0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
+	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
+	'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
+
+static const u8 qwerty_to_ascii_caps[87] = {
+	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J',
+	'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ',
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0};
 
 
 _bool	getascii(u8 code) {
-	if (code > 0x57 || scancode_to_ascii_low[code] == 0) {
+	if (code > 0x57 || qwerty_to_ascii_low[code] == 0) {
 		return false;
 	}
 	return true; 
@@ -49,6 +85,12 @@ static void	handle_arrow(u8 scancode) {
 
 static void	cntl_handler(u8 scancode) {
 	switch (scancode) {
+		case 0x48:
+			kbd_set_layout(!current_layout);
+			break;
+		case 0x50:
+			kbd_set_layout(!current_layout);
+			break;
 		case 0x4D:
 			if (++screen_tracker > 2)
 				screen_tracker = 0;
@@ -72,8 +114,20 @@ static void	cntl_handler(u8 scancode) {
 	}
 }
 
+static char	scancode_to_ascii(u8 scancode) {
+	const u8	*low   = (current_layout == AZERTY) ? azerty_to_ascii_low : qwerty_to_ascii_low;
+	const u8	*shift_map = (current_layout == AZERTY) ? azerty_to_ascii_shift : qwerty_to_ascii_shift;
+	const u8	*caps_map  = (current_layout == AZERTY) ? azerty_to_ascii_caps : qwerty_to_ascii_caps;
+
+	if ((!caps && !shift) || (caps && shift))
+		return low[scancode];
+	if (shift)
+		return shift_map[scancode];
+	return caps_map[scancode];
+}
+
 void	keyboard_handler(void) {
-	u8 scancode = inb(0x60);
+	u8	scancode = inb(0x60);
 
 	if (scancode == 0x2A || scancode == 0x36)
 		shift = 1;
@@ -93,13 +147,9 @@ void	keyboard_handler(void) {
 			}
 			else if (cntl && scancode != 0x1D && scancode != 0x9D)
 				cntl_handler(scancode);
-			else if ((!caps && !shift) || (caps && shift))
-				print_char(scancode_to_ascii_low[scancode], (BG_COLOR << 4) + FG_COLOR);
 			else {
-				if (shift)
-					print_char(scancode_to_ascii_shift[scancode], (BG_COLOR << 4) + FG_COLOR);
-				else
-					print_char(scancode_to_ascii_caps[scancode], (BG_COLOR << 4) + FG_COLOR);
+				u8	c = scancode_to_ascii(scancode);
+				print_char(c, (BG_COLOR << 4) + FG_COLOR);
 			}
 		}
     	}

@@ -37,8 +37,11 @@ typedef struct screens {
 	u8	cmd[76];
 	u32	S_BG_C;
 	s32	S_FG_C;
+	u8	line_buf[80];
+	u32	line_idx;
 } screen_t;
 
+extern _bool	in_getline;
 
 extern s32	BG_COLOR;
 extern s32	FG_COLOR;
@@ -70,8 +73,10 @@ void	arrow_down(void);
 void	arrow_right(void);
 void	arrow_left(void);
 
-
 void	handle_command(void);
+u32	strlen(const u8 *str);
+void	print_layout(char *layout, u8 move);
+void	clean_after_sig(void);
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4

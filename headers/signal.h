@@ -20,9 +20,9 @@
 typedef void	(*sighandler_t)(int signum);
 
 typedef struct {
-    int signals[QUEUE_SIZE];
-    volatile u32 head;
-    volatile u32 tail;
+	int	signals[QUEUE_SIZE];
+	volatile u32	head;
+	volatile u32	tail;
 } signal_queue_t;
 
 extern signal_queue_t	queue;

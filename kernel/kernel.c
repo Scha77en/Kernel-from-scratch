@@ -5,12 +5,22 @@
 #include "../headers/print_stack.h"
 #include "../headers/signal.h"
 
+u8	sc_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
+
 static	void on_sigint(int signum) {
-	printk("[SIGNAL RECEIVED] SIGINT (%d): Interrupted by user (CTRL+C)!", signum);
+	if (in_getline)
+		printk("^C\n");
+	else
+		printk("SIGINT (%d): Interrupted by user (CTRL+C)!\n", signum);
+	clean_after_sig();
 }
 
 static	void on_sigterm(int signum) {
-	printk("[SIGNAL RECEIVED] SIGTERM (%d): Terminating process (CTRL+D)!", signum);
+	if (in_getline)
+		printk("^D\n");
+	else
+		printk("SIGTERM (%d): Terminating process (CTRL+D)!\n", signum);
+	clean_after_sig();
 }
 
 int main(void) {

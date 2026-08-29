@@ -14,7 +14,8 @@ void	timer_handler(void) {
 
 static _bool vectors[IDT_MAX_DESCRIPTORS];
 
-extern void* isr_stub_table[];
+extern void*	isr_stub_table[];
+extern void	isr_stub_128(void);
 
 
 void	interrupt_handler(u32 irq_num) {
@@ -67,6 +68,9 @@ void idt_init(void) {
 		idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
 		vectors[vector] = true;
 	}
+
+	idt_set_descriptor(128, (void *)isr_stub_128, 0xEF);
+	vectors[128] = true;
 
 	__asm__ volatile ("lidt %0" : : "m"(idtr));
 	__asm__ volatile ("sti");

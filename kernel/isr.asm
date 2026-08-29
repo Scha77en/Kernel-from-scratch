@@ -1,7 +1,9 @@
 global isr_stub_table
+global isr_stub_128
 
 extern interrupt_handler
 extern schedule_signal
+extern syscall_handler
 
 %macro isr_err_stub 1
 isr_stub_%+%1:
@@ -23,6 +25,23 @@ isr_stub_%+%1:
 	popad
 	iretd
 %endmacro
+
+; --- Syscall Interrupt Stub (Vector 128 / 0x80) ---
+isr_stub_128:
+	pushad              ; Push EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX
+	push ds
+
+	mov ax, 0x10        ; Load Kernel Data Segment
+	mov ds, ax
+	mov es, ax
+
+	push esp            ; Pass registers_t pointer to C handler
+	call syscall_handler
+	add esp, 4
+
+	pop ds
+	popad               ; Restores updated registers (including EAX return value)
+	iretd
 
 isr_no_err_stub 0
 isr_no_err_stub 1

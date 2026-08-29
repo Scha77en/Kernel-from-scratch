@@ -14,7 +14,7 @@ GRUB_MKRESCUE = grub-mkrescue
 
 # === Source Files ===
 C_SOURCES = $(shell find $(SRC_DIRS) -name "*.c")
-ASM_SOURCES = multiboot_entry.asm kernel/isr.asm
+ASM_SOURCES = multiboot_entry.asm kernel/isr.asm kernel/panic_asm.asm
 C_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(C_SOURCES))
 ASM_OBJECTS = $(patsubst %.asm,$(OBJ_DIR)/%.o,$(ASM_SOURCES))
 ALL_OBJECTS = $(ASM_OBJECTS) $(C_OBJECTS)

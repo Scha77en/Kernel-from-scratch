@@ -15,10 +15,11 @@ static bool		disable_scroll = false;
 static u8		display_count = 0;
 
 s32			screen_tracker = 0;
+_bool			in_getline = false;
 
 u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
 
-static u32	strlen(const u8 *str) {
+u32	strlen(const u8 *str) {
 	u32	i = 0;
 
 	while (str[i])
@@ -284,20 +285,13 @@ void	switch_screen(void) {
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		*video++ = display[screen_tracker].buffer[i];
 		*video++ = display[screen_tracker].buffer[i + 1];
-		//if (i == VGA_MAX_CHAR * 2 - 4)
-			//printk("[%c]", display[screen_tracker].buffer[i]);
 	}
 	c_cols = display[screen_tracker].c_cols;
 	c_rows = display[screen_tracker].c_rows;
+	char	*kbd_layout = (current_layout == AZERTY) ? "azerty" : "qwerty";
+	print_layout(kbd_layout, 0);
 	move_cursor((c_rows * MAX_COLS + c_cols));
 	FG_COLOR = display[screen_tracker].S_FG_C;
-	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i++) {
-		//if (i % 2 == 0 && i > VGA_MAX_CHAR * 2 - 14)
-			//if (!getascii(display[screen_tracker].buffer[i]))
-				//printk("null azbi hda");
-			//else
-				//printk("[%c]", display[screen_tracker].buffer[i]);
-	}
 }
 
 void	printk(char *format, ...) {
@@ -363,9 +357,23 @@ void	print_char(u8 c, u8 color) {
 		move_cursor((c_rows * MAX_COLS + c_cols));
 		display[screen_tracker].c_cols = c_cols;
 		display[screen_tracker].c_rows = c_rows;
-		if (cmd) {
-			handle_command();
+		if (in_getline) {
+			cmd = false;
+			in_getline = false;
+			if (!sig) {
+				print_string("You entered: ", (BG_COLOR << 4) + LIGHT_GREEN);
+				print_string((s8 *)display[screen_tracker].line_buf, (BG_COLOR << 4) + FG_COLOR);
+				print_char('\n', (BG_COLOR << 4) + FG_COLOR);
+			}
 			print_string("kfs>", (BG_COLOR << 4) + screen_color[screen_tracker]);
+			return;
+		}
+
+		if (cmd) {
+			if (!sig)
+				handle_command();
+			if (!in_getline)
+				print_string("kfs>", (BG_COLOR << 4) + screen_color[screen_tracker]);
 		}
 		return ;
 	}
@@ -373,7 +381,14 @@ void	print_char(u8 c, u8 color) {
 		backspace(color);
 		return ;
 	}
-	if (cmd) {
+	if (in_getline && c_cols >= strlen("enter line: ")) {
+		if ((c_cols + 1) >= MAX_COLS)
+			return;
+		if (display[screen_tracker].line_idx < 79) {
+			display[screen_tracker].line_buf[display[screen_tracker].line_idx++] = c;
+		}
+	}
+	if (cmd && !in_getline && !sig) {
 		if ((c_cols + 1) >= MAX_COLS)
 			return ;
 		display[screen_tracker].cmd[display[screen_tracker].c_cols - 4] = c;
@@ -406,6 +421,16 @@ void	print_string(s8 *str, u8 color) {
 	}
 }
 
+static void	handle_get_line_cmd(void) {
+	in_getline = true;
+	display[screen_tracker].line_idx = 0;
+
+	for (u32 i = 0; i < 80; i++)
+		display[screen_tracker].line_buf[i] = '\0';
+
+	print_string("enter line: ", (BG_COLOR << 4) + LIGHT_CYAN);
+}
+
 void	handle_command(void) {
 	cmd = false;
 	u8	*cmd_buf = display[screen_tracker].cmd;
@@ -419,6 +444,8 @@ void	handle_command(void) {
 	command[i] = '\0';
 
 	//printk("cmd == [%s]\n", command);
+	if (!strcmp(command, "get_line", strlen("get_line")))
+		handle_get_line_cmd();
 	if (!strcmp(command, "FG", strlen("FG")))
 		handle_fg();
 	else if (!strcmp(command, "clear", strlen("clear")))
@@ -433,11 +460,16 @@ void	handle_command(void) {
 		handle_help();
 	else if (!strcmp(command, "poweroff", strlen("poweroff")))
 		power_off();
-	else if (!sig)
+	else if (!sig && !in_getline)
 		print_string("command not found!\n", (BG_COLOR << 4) + RED);
 	for (u32 i = 0; i < 76; i++)
 	    display[screen_tracker].cmd[i] = '\0';
 	return ;
+}
+
+void	clean_after_sig(void) {
+	for (u32 i = 0; i < 76; i++)
+	    display[screen_tracker].cmd[i] = '\0';
 }
 
 void	scroll_screen(void) {
@@ -513,7 +545,15 @@ static _bool	find_end_c_cols(u8 arrow) {
 }
 
 void	backspace(u8 color) {
-	if (c_cols > 4) {
+	int	skip = 4;
+	if (in_getline) {
+		skip = strlen("enter line: ");
+		if (display[screen_tracker].line_idx > 0) {
+			display[screen_tracker].line_idx--;
+			display[screen_tracker].line_buf[display[screen_tracker].line_idx] = '\0';
+		}
+	}
+	if (c_cols > skip) {
 		display[screen_tracker].cmd[c_cols - 5] = '\0';
 		c_cols--;
 	}
@@ -528,7 +568,6 @@ void	backspace(u8 color) {
 	*display_buff++ = ' ';
 	*display_buff = color;
 }
-
 
 /*
  			- - - Arrow Functions ---
@@ -632,41 +671,54 @@ void	screen_tracker_d(void) {
 		switch (c_cols) {
 			case 37:
 				if (screen_tracker == 0) {
-					BG_COLOR = screen_color[screen_tracker];
-					FG_COLOR = BLACK;
+					print_char('1', (screen_color[screen_tracker] << 4) + BLACK);
+					break;
 				}
 				print_char('1', (BG_COLOR << 4) + FG_COLOR);
 				break;
 			case 39:
 				if (screen_tracker == 1) {
-					BG_COLOR = screen_color[screen_tracker];
-					FG_COLOR = BLACK;
+					print_char('2', (screen_color[screen_tracker] << 4) + BLACK);
+					break;
 				}
 				print_char('2', (BG_COLOR << 4) + FG_COLOR);
 				break;
 			case 41:
 				if (screen_tracker == 2) {
-					BG_COLOR = screen_color[screen_tracker];
-					FG_COLOR = BLACK;
+					print_char('3', (screen_color[screen_tracker] << 4) + BLACK);
+					break;
 				}
 				print_char('3', (BG_COLOR << 4) + FG_COLOR);
 				break;
 			default:
-				BG_COLOR = BLACK;
-				FG_COLOR = screen_color[screen_tracker];
 				print_char('-', (BG_COLOR << 4) + FG_COLOR);
 				break;
 		}
 	}
 
-	BG_COLOR = screen_color[screen_tracker];
-	FG_COLOR = BLACK;
-	print_string("qwerty", (BG_COLOR << 4) + FG_COLOR);
+	if (!current_layout)
+		print_string("qwerty", (screen_color[screen_tracker] << 4) + BLACK);
+	else
+		print_string("azerty", (screen_color[screen_tracker] << 4) + BLACK);
 
-	BG_COLOR = BLACK;
-	FG_COLOR = GRAY;
 	disable_scroll = false;
 	c_cols = cols_tmp;
 	c_rows = rows_tmp;
 	move_cursor((c_rows * MAX_COLS + c_cols));
+}
+
+void	print_layout(char *layout, u8 move) {
+	u8	save_c_cols = c_cols;
+	u8	save_c_rows = c_rows;
+
+	c_rows = 24;
+	c_cols = MAX_COLS - strlen("qwerty ");
+	print_string(layout, (screen_color[screen_tracker] << 4) + BLACK);
+	c_rows = save_c_rows;
+	c_cols = save_c_cols;
+	display[screen_tracker].c_cols = c_cols;
+	display[screen_tracker].c_rows = c_rows;
+	if (move)
+		move_cursor((c_rows * MAX_COLS + c_cols));
+	return ;
 }

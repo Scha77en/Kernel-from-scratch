@@ -61,4 +61,5 @@ void	dispatch_scheduled_signals(void) {
 
 		signal_emit(signum);
 	}
+	sig = false;
 }
