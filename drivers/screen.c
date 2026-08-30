@@ -1,4 +1,4 @@
-#include "../headers/screen.h"
+#include <screen.h>
 
 s32 BG_COLOR = BLACK;
 s32 FG_COLOR = GRAY;
@@ -11,13 +11,13 @@ struct gdtr_pointer {
 static u32		c_rows = 0;
 static u32		c_cols = 0;
 static screen_t		display[3];
-static bool		disable_scroll = false;
+static _bool		disable_scroll = false;
 static u8		display_count = 0;
 
 s32			screen_tracker = 0;
 _bool			in_getline = false;
 
-u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
+u8	screen_color[3] = {YELLOW, LIGHT_RED, LIGHT_BLUE};
 
 u32	strlen(const u8 *str) {
 	u32	i = 0;
@@ -188,7 +188,7 @@ void	clear_buffers(void) {
 		}
 	}
 	screen_tracker_d();
-	print_string("kfs>", (BG_COLOR << 4) + YELLOW);
+	print_string("kfs>", (BG_COLOR << 4) + screen_color[0]);
 	for (u8 i = 0; i < 8; i++) {
 		if (i == 0)
 			display[1].buffer[i++] = 'k';
@@ -198,7 +198,7 @@ void	clear_buffers(void) {
 			display[1].buffer[i++] = 's';
 		else if (i == 6)
 			display[1].buffer[i++] = '>';
-		display[1].buffer[i] = (BG_COLOR << 4) + LIGHT_RED;
+		display[1].buffer[i] = (BG_COLOR << 4) + screen_color[1];
 	}
 	for (u8 i = 0; i < 8; i++) {
 		if (i == 0)
@@ -209,7 +209,7 @@ void	clear_buffers(void) {
 			display[2].buffer[i++] = 's';
 		else if (i == 6)
 			display[2].buffer[i++] = '>';
-		display[2].buffer[i] = (BG_COLOR << 4) + LIGHT_PURPLE;
+		display[2].buffer[i] = (BG_COLOR << 4) + screen_color[2];
 	}
 	for (u8 i = 0; i < 3; i++) {
 		display[i].c_cols = 4;
@@ -389,7 +389,7 @@ void	print_char(u8 c, u8 color) {
 		}
 	}
 	if (cmd && !in_getline && !sig) {
-		if ((c_cols + 1) >= MAX_COLS)
+		if ((c_cols + 1) >= MAX_COLS && c_rows != 24)
 			return ;
 		display[screen_tracker].cmd[display[screen_tracker].c_cols - 4] = c;
 	}
@@ -402,7 +402,7 @@ void	print_char(u8 c, u8 color) {
 	if (c_cols >= MAX_COLS) {
 		c_cols = 0;
 		c_rows++;
-		if (c_rows >= MAX_ROWS && !disable_scroll) {
+		if (c_rows == MAX_ROWS && !disable_scroll) {
 			c_rows--;
 			scroll_screen();
 		}

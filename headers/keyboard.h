@@ -1,10 +1,10 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "types.h"
-#include "screen.h"
-#include "pic.h"
-#include "signal.h"
+#include <types.h>
+#include <screen.h>
+#include <pic.h>
+#include <signal.h>
 
 
 void	keyboard_handler(void);

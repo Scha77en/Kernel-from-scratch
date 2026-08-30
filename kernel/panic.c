@@ -1,5 +1,5 @@
-#include "../headers/panic.h"
-#include "../headers/screen.h"
+#include <panic.h>
+#include <screen.h>
 
 static panic_stack_snapshot_t panic_snapshot;
 

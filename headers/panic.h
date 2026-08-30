@@ -1,7 +1,7 @@
 #ifndef PANIC_H
 #define PANIC_H
 
-#include "types.h"
+#include <types.h>
 
 #define PANIC_STACK_DUMP_SIZE 512
 

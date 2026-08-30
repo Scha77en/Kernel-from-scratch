@@ -1,10 +1,10 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "types.h"
-#include "low_level.h"
-#include "keyboard.h" 
-#include "print_stack.h"
+#include <types.h>
+#include <low_level.h>
+#include <keyboard.h>
+#include <print_stack.h>
 
 #define VIDEO_ADDRESS 0xb8000
 #define MAX_ROWS 24

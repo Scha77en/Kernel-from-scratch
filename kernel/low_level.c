@@ -1,5 +1,5 @@
-#include "../headers/low_level.h"
-#include "../headers/screen.h"
+#include <low_level.h>
+#include <screen.h>
 
 void	port_byte_out(unsigned short port, unsigned char data) {
 	__asm__("out %%al, %%dx" : :"a" (data), "d" (port));

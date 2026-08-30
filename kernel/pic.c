@@ -1,5 +1,5 @@
-#include "pic.h"
-#include "screen.h"
+#include <pic.h>
+#include <screen.h>
 
 void	PIC_sendEOI(u8 irq) {
 	if (irq >= 8)

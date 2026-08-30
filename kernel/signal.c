@@ -1,10 +1,4 @@
-#include "../headers/signal.h"
-
-//void	signal_handler(void) {
-//	return ;
-//}
-
-//static sighandler_t	signal_handlers[MAX_SIG] = {0};
+#include <signal.h>
 
 static sighandler_t	signal_table[MAX_SIG];
 
@@ -38,7 +32,7 @@ void	signal_emit(int signum) {
 }
 
 
-bool	schedule_signal(int signum) {
+_bool	schedule_signal(int signum) {
 	if (signum <= 0 || signum >= MAX_SIG) {
 		return false;
 	}

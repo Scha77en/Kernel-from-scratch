@@ -1,5 +1,5 @@
-#include "../headers/screen.h"
-#include "../headers/idt.h"
+#include <screen.h>
+#include <idt.h>
 
 static idtr_t idtr;
 

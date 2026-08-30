@@ -1,7 +1,7 @@
 #ifndef SIGNAL_H
 #define SIGNAL_H
 
-#include "types.h"
+#include <types.h>
 
 #define MAX_SIG 32
 
@@ -39,7 +39,7 @@ void	signal_emit(int signum);
 
 
 // Scheduling API
-bool	schedule_signal(int signum);
+_bool	schedule_signal(int signum);
 void	dispatch_scheduled_signals(void);
 
 //sighandler_t	signal_handlers[32] = {0};

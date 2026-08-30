@@ -1,11 +1,9 @@
-#include "../headers/types.h"
-#include "../headers/screen.h"
-#include "../headers/low_level.h"
-#include "../headers/idt.h"
-#include "../headers/print_stack.h"
-#include "../headers/signal.h"
-
-u8	sc_color[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
+#include <types.h>
+#include <screen.h>
+#include <low_level.h>
+#include <idt.h>
+#include <print_stack.h>
+#include <signal.h>
 
 static	void on_sigint(int signum) {
 	if (in_getline)

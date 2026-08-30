@@ -1,4 +1,4 @@
-#include "../headers/print_stack.h"
+#include <print_stack.h>
 
 typedef struct s_stack_frame {
     struct s_stack_frame *ebp;

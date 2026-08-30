@@ -1,4 +1,4 @@
-#include "../headers/keyboard.h"
+#include <keyboard.h>
 
 static u8	shift = 0;
 static u8	caps = 0;
@@ -6,7 +6,7 @@ static u8	cntl = 0;
 _bool		cmd = false;
 
 kbd_layout_t	current_layout = QWERTY;
-u8	sc_color_kbd[3] = {YELLOW, LIGHT_RED, LIGHT_PURPLE};
+u8	sc_color_kbd[3] = {YELLOW, LIGHT_RED, LIGHT_BLUE};
 
 static const u8	azerty_to_ascii_low[87] = {
 	0, 0, '&', 0xE9, '"', '\'', '(', '-', 0xE8, '_', 0xE7, 0xE0, ')', '=', '\b', '\t',

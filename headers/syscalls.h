@@ -1,7 +1,7 @@
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
-#include "types.h"
+#include <types.h>
 
 // System Call Numbers (EAX register)
 #define SYS_READ    0

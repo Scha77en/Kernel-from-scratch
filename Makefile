@@ -6,9 +6,10 @@ ISO_ROOT = iso_root
 GRUB_DIR = $(ISO_ROOT)/boot/grub
 
 # === Compiler and Tools ===
-CC = i386-elf-gcc
+KERNEL_HEADERS = headers
+CC = gcc
 ASM = nasm
-LD = i386-elf-ld
+LD = ld
 QEMU = qemu-system-i386
 GRUB_MKRESCUE = grub-mkrescue
 
@@ -25,7 +26,8 @@ CFLAGS = \
 	-fno-stack-protector    \
 	-I$(HEADERS_DIR)       \
 	-nodefaultlibs	\
-	-nostdlib 
+	-nostdlib \
+	-m32
 LDFLAGS = -m elf_i386 -T linker.ld
 
 # === Targets ===
@@ -39,7 +41,7 @@ build:
 
 # Compile C files
 $(OBJ_DIR)/%.o: %.c build
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I $(KERNEL_HEADERS) -c $< -o $@
 
 # Assemble ASM files
 $(OBJ_DIR)/%.o: %.asm build

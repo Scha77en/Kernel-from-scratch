@@ -1,9 +1,9 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include "types.h"
-#include "pic.h"
-#include "keyboard.h"
+#include <types.h>
+#include <pic.h>
+#include <keyboard.h>
 
 typedef struct {
 	u16    isr_low;
