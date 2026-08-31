@@ -13,11 +13,16 @@ static	void on_sigint(int signum) {
 	clean_after_sig();
 }
 
+void divide_by_zero(void){
+	float i = 5/0;
+}
+
 static	void on_sigterm(int signum) {
 	if (in_getline)
 		printk("^D\n");
-	else
-		printk("SIGTERM (%d): Terminating process (CTRL+D)!\n", signum);
+	else{
+		divide_by_zero();
+	}
 	clean_after_sig();
 }
 

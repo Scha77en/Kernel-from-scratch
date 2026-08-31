@@ -29,6 +29,9 @@ void	interrupt_handler(u32 irq_num) {
 		keyboard_handler();
 		return ;
 	}
+	else if(irq_num == 0){
+		kernel_panic("divide by zero");
+	}
 	else
 		return ;
 }
