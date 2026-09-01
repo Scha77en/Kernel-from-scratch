@@ -28,19 +28,19 @@ isr_stub_%+%1:
 
 ; --- Syscall Interrupt Stub (Vector 128 / 0x80) ---
 isr_stub_128:
-	pushad              ; Push EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX
+	pushad
 	push ds
 
-	mov ax, 0x10        ; Load Kernel Data Segment
+	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
 
-	push esp            ; Pass registers_t pointer to C handler
+	push esp
 	call syscall_handler
 	add esp, 4
 
 	pop ds
-	popad               ; Restores updated registers (including EAX return value)
+	popad
 	iretd
 
 isr_no_err_stub 0

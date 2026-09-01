@@ -71,6 +71,7 @@ static void	handle_help(void) {
 	print_string("gdt        --> Print the address and content of gdt\n", (BG_COLOR << 4) + CYAN);
 	print_string("reboot     --> Reboot the kernel\n", (BG_COLOR << 4) + LIGHT_PURPLE);
 	print_string("poweroff   --> Turn off the kernel\n", (BG_COLOR << 4) + PURPLE);
+	print_string("get_line   --> Returns your input line to you\n", (BG_COLOR << 4) + LIGHT_CYAN);
 }
 
 static void	fg_wrong_cmd(void) {
