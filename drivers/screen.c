@@ -272,11 +272,11 @@ void	print_int(s32 num) {
 void	switch_screen(void) {
 	clear_screen(1);
 	if (display_count < 3) {
-		if (screen_tracker == 1 && display_count == 0) {
+		if (screen_tracker == 1) {
 			screen_tracker_d();
 			display_count++;
 		}
-		else if (screen_tracker == 2 && display_count == 1) {
+		else if (screen_tracker == 2) {
 			screen_tracker_d();
 			display_count++;
 		}
