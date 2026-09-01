@@ -30,8 +30,6 @@ extern signal_queue_t	queue;
 
 extern _bool	sig;
 
-void	signal(int sig, void (*handler)(void));
-
 // Public Kernel API
 void	signal_init(void);
 int	signal_register(int signum, sighandler_t handler);

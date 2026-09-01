@@ -13,6 +13,7 @@ static u32		c_cols = 0;
 static screen_t		display[3];
 static _bool		disable_scroll = false;
 static u8		display_count = 0;
+static _bool		is_layout = false;
 
 s32			screen_tracker = 0;
 _bool			in_getline = false;
@@ -271,8 +272,14 @@ void	print_int(s32 num) {
 void	switch_screen(void) {
 	clear_screen(1);
 	if (display_count < 3) {
-		screen_tracker_d();
-		display_count++;
+		if (screen_tracker == 1 && display_count == 0) {
+			screen_tracker_d();
+			display_count++;
+		}
+		else if (screen_tracker == 2 && display_count == 1) {
+			screen_tracker_d();
+			display_count++;
+		}
 	}
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
@@ -374,7 +381,7 @@ void	print_char(u8 c, u8 color) {
 		backspace(color);
 		return ;
 	}
-	if (in_getline && c_cols >= strlen("enter line: ")) {
+	if (in_getline && c_cols >= strlen("enter line: ") && !is_layout) {
 		if ((c_cols + 1) >= MAX_COLS)
 			return;
 		if (display[screen_tracker].line_idx < 79) {
@@ -436,7 +443,6 @@ void	handle_command(void) {
 	}
 	command[i] = '\0';
 
-	//printk("cmd == [%s]\n", command);
 	if (!strcmp(command, "get_line", strlen("get_line")))
 		handle_get_line_cmd();
 	if (!strcmp(command, "FG", strlen("FG")))
@@ -654,6 +660,7 @@ void	print_buffer_sc(void) {
 }
 
 void	screen_tracker_d(void) {
+	is_layout = true;
 	u32	cols_tmp = c_cols;
 	u32	rows_tmp = c_rows;
 	c_cols = 0;
@@ -698,9 +705,11 @@ void	screen_tracker_d(void) {
 	c_cols = cols_tmp;
 	c_rows = rows_tmp;
 	move_cursor((c_rows * MAX_COLS + c_cols));
+	is_layout = false;
 }
 
 void	print_layout(char *layout, u8 move) {
+	is_layout = true;
 	u8	save_c_cols = c_cols;
 	u8	save_c_rows = c_rows;
 
@@ -713,5 +722,6 @@ void	print_layout(char *layout, u8 move) {
 	display[screen_tracker].c_rows = c_rows;
 	if (move)
 		move_cursor((c_rows * MAX_COLS + c_cols));
+	is_layout = false;
 	return ;
 }

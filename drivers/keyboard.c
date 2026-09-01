@@ -94,11 +94,19 @@ static void	cntl_handler(u8 scancode) {
 			kbd_set_layout(!current_layout);
 			break;
 		case 0x4D:
+			if (in_getline) {
+				printk("You Switched the screens!!\n");
+				in_getline = false;
+			}
 			if (++screen_tracker > 2)
 				screen_tracker = 0;
 			switch_screen();
 			break;
 		case 0x4B:
+			if (in_getline) {
+				printk("You Switched the screens!!\n");
+				in_getline = false;
+			}
 			if (--screen_tracker < 0)
 				screen_tracker = 2;
 			switch_screen();

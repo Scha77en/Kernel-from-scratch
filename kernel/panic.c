@@ -53,14 +53,10 @@ void print_stack_trace(u32 max_frames) {
 
         u32 *next_ebp = (u32 *)ebp[0];
 
-        // Guard 1: Stop if next EBP is NULL
         if (!next_ebp) break;
 
-        // Guard 2: Stack grows DOWN, so caller EBP MUST be at a HIGHER memory address.
-        // If next_ebp <= ebp, we encountered a cyclic loop from stale stack data.
         if (next_ebp <= ebp) break;
 
-        // Guard 3: Stop unwinding once we hit main
         if (!strcmp(name, "main", 4)) break;
 
         ebp = next_ebp;
