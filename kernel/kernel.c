@@ -21,15 +21,20 @@ static	void on_sigterm(int signum) {
 	if (in_getline)
 		printk("^D\n");
 	else{
-		divide_by_zero();
+		printk("SIGTERM (%d): Interrupted by user (CTRL+D)!\n", signum);
 	}
 	clean_after_sig();
+}
+
+void on_sigpanic(int signum){
+	divide_by_zero();
 }
 
 int main(void) {
 	signal_init();
 	signal_register(SIGINT, on_sigint);
 	signal_register(SIGTERM, on_sigterm);
+	signal_register(SIGKILL, on_sigpanic);
 
 	clear_screen(0);
 	clear_buffers();

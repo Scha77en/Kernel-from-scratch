@@ -109,6 +109,10 @@ static void	cntl_handler(u8 scancode) {
 			sig = true;
 			schedule_signal(SIGTERM);
 			break;
+		case 0x19:
+			sig = true;
+			schedule_signal(SIGKILL);
+			break;
 		default:
 			return ;
 	}
