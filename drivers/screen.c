@@ -12,7 +12,7 @@ static u32		c_rows = 0;
 static u32		c_cols = 0;
 static screen_t		display[3];
 static _bool		disable_scroll = false;
-static u8		display_count = 0;
+static _bool		layout_vector[3];
 static _bool		is_layout = false;
 
 s32			screen_tracker = 0;
@@ -269,18 +269,14 @@ void	print_int(s32 num) {
 	}
 }
 
+
 void	switch_screen(void) {
 	clear_screen(1);
-	if (display_count < 3) {
-		if (screen_tracker == 1) {
-			screen_tracker_d();
-			display_count++;
-		}
-		else if (screen_tracker == 2) {
-			screen_tracker_d();
-			display_count++;
-		}
+	if (!layout_vector[screen_tracker]) {
+		screen_tracker_d();
+		layout_vector[screen_tracker] = true;
 	}
+	
 	volatile u8 *video = (volatile u8 *)VIDEO_ADDRESS;
 	for (u32 i = 0; i < VGA_MAX_CHAR * 2; i += 2) {
 		*video++ = display[screen_tracker].buffer[i];
