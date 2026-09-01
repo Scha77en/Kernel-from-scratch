@@ -15,4 +15,4 @@ panic_clear_registers_and_halt:
 
 .halt_loop:
     hlt
-    jmp .halt_loop  ; Loop in case an NMI wakes the CPU
+    jmp .halt_loop

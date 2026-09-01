@@ -5,6 +5,8 @@
 
 #define PANIC_STACK_DUMP_SIZE 512
 
+extern  _bool in_panic;
+
 typedef struct {
     u32 ebp;
     u32 esp;
@@ -13,7 +15,8 @@ typedef struct {
 
 void save_panic_stack(void);
 void panic_clear_registers_and_halt(void) __attribute__((noreturn));
-void kernel_panic(const char *reason);
+void kernel_panic(int err_code);
+void print_stack_trace(u32 max_frames);
 
 #endif
 

@@ -6,7 +6,6 @@ typedef u32 (*syscall_fn_t)(u32 arg1, u32 arg2, u32 arg3);
 
 static syscall_fn_t syscall_table[NUM_SYSCALLS];
 
-
 int sys_read(int fd, char *buf, u32 count) {
     if (fd != 0 || !buf) {
         return -1;
@@ -27,21 +26,7 @@ int sys_write(int fd, const char *buf, u32 count) {
 
 void sys_reboot(void) {
     printk("\n[KERNEL] Rebooting system...\n");
-
-    asm volatile ("cli");
-
-    u8 good = 0x02;
-    while (good & 0x02) {
-        good = inb(0x64);
-    }
-    outb(0x64, 0xFE);
-
-    asm volatile ("lgdt 0");
-    asm volatile ("int $3");
-
-    while (1) {
-        asm volatile ("hlt");
-    }
+	outb(0xCF9, 0xE);
 }
 
 int sys_getpid(void) {

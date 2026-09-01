@@ -4,6 +4,7 @@
 #include <types.h>
 #include <pic.h>
 #include <keyboard.h>
+#include <panic.h>
 
 typedef struct {
 	u16    isr_low;

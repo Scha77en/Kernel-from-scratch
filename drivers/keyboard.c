@@ -8,6 +8,8 @@ _bool		cmd = false;
 kbd_layout_t	current_layout = QWERTY;
 u8	sc_color_kbd[3] = {YELLOW, LIGHT_RED, LIGHT_BLUE};
 
+extern void	divide_by_zero(void);
+
 static const u8	azerty_to_ascii_low[87] = {
 	0, 0, '&', 0xE9, '"', '\'', '(', '-', 0xE8, '_', 0xE7, 0xE0, ')', '=', '\b', '\t',
 	'a', 'z', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '^', '$', '\n', 0, 
@@ -108,6 +110,10 @@ static void	cntl_handler(u8 scancode) {
 		case 0x20:
 			sig = true;
 			schedule_signal(SIGTERM);
+			break;
+		case 0x19:
+			sig = true;
+			schedule_signal(SIGPANIC);
 			break;
 		default:
 			return ;

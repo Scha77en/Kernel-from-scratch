@@ -5,6 +5,7 @@
 #include <low_level.h>
 #include <keyboard.h>
 #include <print_stack.h>
+#include <panic.h>
 
 #define VIDEO_ADDRESS 0xb8000
 #define MAX_ROWS 24
@@ -75,6 +76,7 @@ void	arrow_left(void);
 
 void	handle_command(void);
 u32	strlen(const u8 *str);
+int	strcmp(const char * s1, const char *s2, u32 n);
 void	print_layout(char *layout, u8 move);
 void	clean_after_sig(void);
 

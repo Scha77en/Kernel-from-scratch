@@ -20,11 +20,9 @@ typedef struct registers {
     u32 eip, cs, eflags, useresp, ss;           // Pushed by hardware automatically
 } registers_t;
 
-// API Prototypes
 void syscall_init(void);
 void syscall_handler(registers_t *regs);
 
-// Syscall Base Implementation Prototypes
 int  sys_read(int fd, char *buf, u32 count);
 int  sys_write(int fd, const char *buf, u32 count);
 void sys_reboot(void);

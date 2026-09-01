@@ -27,7 +27,7 @@ u32	strlen(const u8 *str) {
 	return i;
 }
 
-static int	strcmp(const char * s1, const char *s2, u32 n) {
+int	strcmp(const char * s1, const char *s2, u32 n) {
 	const char * ps1 = s1;
 	const char * ps2 = s2;
 
@@ -153,15 +153,7 @@ static void	print_gdt(void) {
         u32 high_32 = gdt_memory[(i * 2) + 1];
 
         u16 selector = i * 8;
-int strcmp(const char * s1, const char *s2){
-    const char * ps1 = s1;
-    const char * ps2 = s2;
-    while ((*ps1 ||* ps2 )&& *ps1 == *ps2){
-        ps2++;
-        ps1++;
-    }
-    return *ps1 - *ps2;
-}
+
         const char* type = "Unknown";
         if (i == 0) type = "Null Descriptor";
         else if (i == 1) type = "Kernel Code (Ring 0)";
@@ -372,7 +364,7 @@ void	print_char(u8 c, u8 color) {
 		if (cmd) {
 			if (!sig)
 				handle_command();
-			if (!in_getline)
+			if (!in_getline && !in_panic)
 				print_string("kfs>", (BG_COLOR << 4) + screen_color[screen_tracker]);
 		}
 		return ;

@@ -31,7 +31,6 @@ void	signal_emit(int signum) {
     }
 }
 
-
 _bool	schedule_signal(int signum) {
 	if (signum <= 0 || signum >= MAX_SIG) {
 		return false;
